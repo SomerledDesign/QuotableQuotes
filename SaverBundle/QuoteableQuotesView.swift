@@ -251,7 +251,9 @@ final class QuoteableQuotesView: ScreenSaverView {
 
     /// Returns and refreshes the options/configuration sheet.
     override var configureSheet: NSWindow? {
-        configWindow = makeConfigureWindow()
+        if configWindow == nil {
+            configWindow = makeConfigureWindow()
+        }
         refreshConfigControls()
         return configWindow
     }
@@ -574,15 +576,17 @@ final class QuoteableQuotesView: ScreenSaverView {
 
     /// Creates the detached/options configuration window.
     private func makeConfigureWindow() -> NSWindow {
-        let window = NSWindow(
+        let window = NSPanel(
             contentRect: NSRect(x: 0, y: 0, width: 500, height: 810),
-            styleMask: [.titled, .closable],
+            styleMask: [.titled],
             backing: .buffered,
             defer: false
         )
         window.title = "Quoteable Quotes Options"
         window.isReleasedWhenClosed = false
         window.isMovableByWindowBackground = true
+        window.hidesOnDeactivate = false
+        window.worksWhenModal = true
 
         let root = NSView(frame: NSRect(x: 0, y: 0, width: 500, height: 810))
 
@@ -1109,6 +1113,7 @@ final class QuoteableQuotesView: ScreenSaverView {
             parent.endSheet(sheetWindow)
         }
         detachedConfigWindow = makeConfigureWindow()
+        detachedConfigWindow?.styleMask = [.titled, .closable]
         refreshConfigControls()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
             self.detachedConfigWindow?.center()
