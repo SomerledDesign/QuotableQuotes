@@ -88,12 +88,12 @@ Supported XML shape:
 ```
 
 Bundled libraries:
-- `quotes.xml` (mixed)
-- `leadership-quotes.xml`
-- `stoicism-quotes.xml`
-- `comedic-quotes.xml`
-- `greek-philosophers-quotes.xml`
-- `french-revolutionaries-quotes.xml`
+- `quotes.xml` (mixed sample, 100 total)
+- `leadership-quotes.xml` (100 total)
+- `stoicism-quotes.xml` (100 total, now includes Arthur Schopenhauer)
+- `comedic-quotes.xml` (100 total)
+- `greek-philosophers-quotes.xml` (100 total)
+- `french-revolutionaries-quotes.xml` (100 total)
 
 Runtime behavior:
 - Quotes are randomized.

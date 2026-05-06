@@ -92,6 +92,12 @@ Re-introduce quote playback hotkeys with stable behavior in standalone and `.sav
 - Mixed/default quote source refresh complete:
   - Rebuilt `quotes.xml` as a true mix with 10 quotes from each bundled theme file (50 total).
   - Added per-theme metadata on each mixed quote entry (`theme`, `font`, `attribution`).
+- Quote library expansion refresh complete:
+  - Expanded all bundled quote XML files from 50 to 100 total entries.
+  - Verified 100 unique bodies in every themed `*-quotes.xml` file.
+  - Rebuilt `quotes.xml` as a 100-entry mixed sample with 20 quotes from each themed library.
+  - Folded Arthur Schopenhauer into `stoicism-quotes.xml`.
+  - Added test coverage for bundled library counts, uniqueness, mixed sampling, and Schopenhauer inclusion.
 - Hardcoded fallback refresh complete:
   - Replaced generic fallback set with 10 themed quotes (2 from each theme).
 - Random no-repeat rotation complete:
@@ -159,7 +165,7 @@ Re-introduce quote playback hotkeys with stable behavior in standalone and `.sav
   - Updated README with `.saver` build/install workflow.
 
 ## Build Status
-- Last successful build command: `swift build -c release`  
+- Last successful build command: `swift build`  
 - Last successful test command: `swift test`
 
 ## Outstanding Blockers

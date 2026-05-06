@@ -92,6 +92,40 @@ import Testing
     #expect(quotes.first?.theme == "leadership")
 }
 
+@Test func bundledThemeLibrariesContainOneHundredUniqueQuotes() throws {
+    let themeFiles = [
+        "leadership-quotes.xml",
+        "stoicism-quotes.xml",
+        "comedic-quotes.xml",
+        "greek-philosophers-quotes.xml",
+        "french-revolutionaries-quotes.xml"
+    ]
+
+    for file in themeFiles {
+        let quotes = try QuoteRepository.loadBundledQuotes(named: file)
+        #expect(quotes.count == 100)
+        #expect(Set(quotes.map(\.body)).count == 100)
+    }
+}
+
+@Test func stoicismLibraryIncludesArthurSchopenhauer() throws {
+    let quotes = try QuoteRepository.loadBundledQuotes(named: "stoicism-quotes.xml")
+    let schopenhauerQuotes = quotes.filter { $0.author == "Arthur Schopenhauer" }
+    #expect(!schopenhauerQuotes.isEmpty)
+}
+
+@Test func mixedBundledLibrarySamplesTwentyQuotesPerTheme() throws {
+    let quotes = try QuoteRepository.loadBundledQuotes(named: "quotes.xml")
+    #expect(quotes.count == 100)
+
+    let counts = Dictionary(grouping: quotes, by: \.theme).mapValues(\.count)
+    #expect(counts["leadership"] == 20)
+    #expect(counts["stoicism"] == 20)
+    #expect(counts["comedic"] == 20)
+    #expect(counts["greek-philosophers"] == 20)
+    #expect(counts["french-revolutionaries"] == 20)
+}
+
 @Test func quoteRecommendedDisplayDurationScalesWithWordCount() {
     let short = Quote(body: "One two three four five six seven", author: "A")
     let medium = Quote(body: "One two three four five six seven eight nine ten eleven twelve thirteen", author: "B")

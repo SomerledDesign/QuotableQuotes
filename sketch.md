@@ -50,7 +50,7 @@ Status: Complete
    - `font`
    - `attribution`
  - Make the default `quotes.xml` a true mixed library:
-   - 10 medium-length quotes from each theme file (50 total).
+   - 20 quotes from each theme file (100 total).
  - Keep a hardcoded fallback sample:
    - 2 quotes from each theme (10 total) used only if XML loading fails.
  - Runtime quote rotation behavior:
