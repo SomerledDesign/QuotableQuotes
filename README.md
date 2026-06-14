@@ -30,6 +30,14 @@ In fullscreen mode, mouse or keyboard input exits the app (screensaver-style beh
 
 ## Build `.saver` Bundle (Release)
 
+The current user-facing download page is the GitHub latest release:
+
+```text
+https://github.com/SomerledDesign/QuotableQuotes/releases/latest
+```
+
+To build the `.saver` bundle locally:
+
 ```bash
 scripts/build-saver.sh
 ```
@@ -117,4 +125,6 @@ swift test
 
 ## Release Notes
 
-The current release page draft is [docs/releases/v1.0.0.md](docs/releases/v1.0.0.md).
+Latest GitHub release: https://github.com/SomerledDesign/QuotableQuotes/releases/latest
+
+The checked-in v1.0.0 release notes source is [docs/releases/v1.0.0.md](docs/releases/v1.0.0.md).

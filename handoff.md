@@ -230,6 +230,10 @@ Ship the first usable Quoteable Quotes `.saver` release:
   - Added install wiki content at `docs/wiki/Installation.md`.
   - Added repo release-page draft at `docs/releases/v1.0.0.md`.
   - Set saver bundle short version to `1.0.0`.
+- GitHub release publication follow-up:
+  - README now points users to `https://github.com/SomerledDesign/QuotableQuotes/releases/latest`.
+  - `docs/releases/v1.0.0.md` now uses GitHub-safe release/download/install wording.
+  - Existing `v1.0.0` tag remains anchored at `bf15102`.
 
 ## Build Status
 - Last successful XIB compile command: `scripts/compile-options-xib.sh`
@@ -239,4 +243,4 @@ Ship the first usable Quoteable Quotes `.saver` release:
 
 ## Outstanding Blockers
 - No code blockers for current baseline.
-- GitHub release/wiki publication still depends on local git commit and remote/auth availability.
+- GitHub wiki repository is not enabled; install guide remains in repo docs.
