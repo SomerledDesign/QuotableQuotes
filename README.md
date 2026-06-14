@@ -48,6 +48,8 @@ scripts/install-saver.sh
 
 Then open `System Settings -> Screen Saver` and select `Quoteable Quotes`.
 
+For a user-facing install walkthrough, see [docs/wiki/Installation.md](docs/wiki/Installation.md).
+
 ## Options
 Use `ScreenSaver -> Options...` in standalone app, or `Options...` in Screen Saver settings.
 
@@ -89,6 +91,7 @@ Supported XML shape:
 
 Bundled libraries:
 - `quotes.xml` (mixed sample, 100 total)
+- `generic-quotes.xml` (generic sample, 33 total)
 - `leadership-quotes.xml` (100 total)
 - `stoicism-quotes.xml` (100 total, now includes Arthur Schopenhauer)
 - `comedic-quotes.xml` (100 total)
@@ -99,7 +102,6 @@ Runtime behavior:
 - Quotes are randomized.
 - No repeats until the full selected set is shown.
 - Dynamic timing scales from the configured base time.
-- Hotkeys are currently disabled and deferred to Milestone 7.
 
 ## Test
 
@@ -112,3 +114,7 @@ swift test
 ```text
 .build/arm64-apple-macosx/release/ScreenSaver
 ```
+
+## Release Notes
+
+The current release page draft is [docs/releases/v1.0.0.md](docs/releases/v1.0.0.md).

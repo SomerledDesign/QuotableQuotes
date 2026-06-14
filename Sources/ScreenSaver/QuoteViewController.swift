@@ -39,7 +39,6 @@ final class QuoteViewController: NSViewController {
         let root = NSView()
         root.wantsLayer = true
         root.layer?.backgroundColor = NSColor.black.cgColor
-        root.translatesAutoresizingMaskIntoConstraints = false
         view = root
     }
 
@@ -189,6 +188,11 @@ final class QuoteViewController: NSViewController {
             return image
         }
 
+        if let flattenedURL = Bundle.module.url(forResource: name, withExtension: ext),
+           let image = NSImage(contentsOf: flattenedURL) {
+            return image
+        }
+
         return nil
     }
 
@@ -240,8 +244,9 @@ final class QuoteViewController: NSViewController {
         let settings = AppSettings.shared
         let quoteSize = settings.fontSize
         let authorSize = max(14, round(quoteSize * 0.58))
-        let quoteFont = NSFont(name: settings.fontName, size: quoteSize) ?? NSFont.systemFont(ofSize: quoteSize, weight: .medium)
-        let authorFont = NSFont(name: settings.fontName, size: authorSize) ?? NSFont.systemFont(ofSize: authorSize, weight: .regular)
+        let resolvedFontName = quote.preferredFontName(fallback: settings.fontName)
+        let quoteFont = NSFont(name: resolvedFontName, size: quoteSize) ?? NSFont.systemFont(ofSize: quoteSize, weight: .medium)
+        let authorFont = NSFont(name: resolvedFontName, size: authorSize) ?? NSFont.systemFont(ofSize: authorSize, weight: .regular)
 
         let paragraph = NSMutableParagraphStyle()
         paragraph.alignment = .center

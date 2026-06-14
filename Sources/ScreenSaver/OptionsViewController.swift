@@ -11,12 +11,68 @@ final class OptionsViewController: NSTabViewController {
         let display = DisplayOptionsViewController()
         display.title = "Display"
         addChild(display)
+        _ = display.view
+        preferredContentSize = display.preferredContentSize
     }
 }
 
 /// Display/settings tab for fonts, colors, backgrounds, content source, timing, and animation.
 @MainActor
 final class DisplayOptionsViewController: NSViewController {
+    // Design-time outlets for `DisplayOptionsView.xib`. The standalone app
+    // still uses the programmatic layout below; these give Interface Builder
+    // a fully connectable surface while the XIB is being shaped visually.
+    @IBOutlet private weak var xibFontPicker: NSPopUpButton?
+    @IBOutlet private weak var xibBackgroundColorWell: NSColorWell?
+    @IBOutlet private weak var xibFontColorWell: NSColorWell?
+    @IBOutlet private weak var xibFontSizeSlider: NSSlider?
+    @IBOutlet private weak var xibFontSizeValueLabel: NSTextField?
+    @IBOutlet private weak var xibBackgroundModePicker: NSPopUpButton?
+    @IBOutlet private weak var xibBundledBackgroundPicker: NSPopUpButton?
+    @IBOutlet private weak var xibCustomBackgroundPathLabel: NSTextField?
+    @IBOutlet private weak var xibChooseBackgroundButton: NSButton?
+    @IBOutlet private weak var xibClearBackgroundButton: NSButton?
+    @IBOutlet private weak var xibQuoteThemePicker: NSPopUpButton?
+    @IBOutlet private weak var xibQuoteFilePathLabel: NSTextField?
+    @IBOutlet private weak var xibChooseXMLButton: NSButton?
+    @IBOutlet private weak var xibUseBundledButton: NSButton?
+    @IBOutlet private weak var xibAnimationStylePicker: NSPopUpButton?
+    @IBOutlet private weak var xibBaseTimeSlider: NSSlider?
+    @IBOutlet private weak var xibBaseTimeValueLabel: NSTextField?
+    @IBOutlet private weak var xibShowAttributionCheckbox: NSButton?
+
+    private let usesXIBLayout: Bool
+
+    private var activeFontPicker: NSPopUpButton { xibFontPicker ?? fontPicker }
+    private var activeBackgroundColorWell: NSColorWell { xibBackgroundColorWell ?? colorWell }
+    private var activeFontColorWell: NSColorWell { xibFontColorWell ?? foregroundWell }
+    private var activeFontSizeSlider: NSSlider { xibFontSizeSlider ?? fontSizeSlider }
+    private var activeFontSizeValueLabel: NSTextField { xibFontSizeValueLabel ?? fontSizeValueLabel }
+    private var activeBackgroundModePicker: NSPopUpButton { xibBackgroundModePicker ?? backgroundModePicker }
+    private var activeBundledBackgroundPicker: NSPopUpButton { xibBundledBackgroundPicker ?? bundledBackgroundPicker }
+    private var activeCustomBackgroundPathLabel: NSTextField { xibCustomBackgroundPathLabel ?? customBackgroundPathLabel }
+    private var activeChooseBackgroundButton: NSButton { xibChooseBackgroundButton ?? chooseBackgroundButton }
+    private var activeClearBackgroundButton: NSButton { xibClearBackgroundButton ?? clearBackgroundButton }
+    private var activeQuoteThemePicker: NSPopUpButton { xibQuoteThemePicker ?? quoteThemePicker }
+    private var activeQuoteFilePathLabel: NSTextField { xibQuoteFilePathLabel ?? quoteFilePathLabel }
+    private var activeChooseXMLButton: NSButton { xibChooseXMLButton ?? chooseXMLButton }
+    private var activeUseBundledButton: NSButton { xibUseBundledButton ?? useBundledButton }
+    private var activeAnimationStylePicker: NSPopUpButton { xibAnimationStylePicker ?? animationStylePicker }
+    private var activeBaseTimeSlider: NSSlider { xibBaseTimeSlider ?? baseTimeSlider }
+    private var activeBaseTimeValueLabel: NSTextField { xibBaseTimeValueLabel ?? baseTimeValueLabel }
+    private var activeShowAttributionCheckbox: NSButton { xibShowAttributionCheckbox ?? showAttributionCheckbox }
+
+    init() {
+        let hasNib = Bundle.module.url(forResource: "DisplayOptionsView", withExtension: "nib") != nil
+        usesXIBLayout = hasNib
+        super.init(nibName: hasNib ? NSNib.Name("DisplayOptionsView") : nil, bundle: hasNib ? .module : nil)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        nil
+    }
+
     private let fontLabel: NSTextField = {
         let label = NSTextField(labelWithString: "Font")
         label.font = .systemFont(ofSize: 13, weight: .semibold)
@@ -215,6 +271,11 @@ final class DisplayOptionsViewController: NSViewController {
 
     /// Builds root view container.
     override func loadView() {
+        if usesXIBLayout {
+            super.loadView()
+            return
+        }
+
         let root = NSView()
         root.translatesAutoresizingMaskIntoConstraints = false
         view = root
@@ -224,12 +285,40 @@ final class DisplayOptionsViewController: NSViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         configureControls()
-        configureLayout()
+        if !usesXIBLayout {
+            configureLayout()
+            preferredContentSize = NSSize(width: 500, height: 760)
+        } else {
+            let fittedSize = view.fittingSize
+            let frameSize = view.frame.size
+            preferredContentSize = NSSize(
+                width: max(fittedSize.width, frameSize.width),
+                height: max(fittedSize.height, frameSize.height)
+            )
+        }
     }
 
     /// Initializes control values from current `AppSettings` and installs action handlers.
     private func configureControls() {
+        let fontPicker = activeFontPicker
+        let backgroundModePicker = activeBackgroundModePicker
+        let bundledBackgroundPicker = activeBundledBackgroundPicker
+        let backgroundColorWell = activeBackgroundColorWell
+        let fontColorWell = activeFontColorWell
+        let fontSizeSlider = activeFontSizeSlider
+        let fontSizeValueLabel = activeFontSizeValueLabel
+        let animationStylePicker = activeAnimationStylePicker
+        let baseTimeSlider = activeBaseTimeSlider
+        let baseTimeValueLabel = activeBaseTimeValueLabel
+        let showAttributionCheckbox = activeShowAttributionCheckbox
+        let quoteThemePicker = activeQuoteThemePicker
+        let chooseXMLButton = activeChooseXMLButton
+        let useBundledButton = activeUseBundledButton
+        let chooseBackgroundButton = activeChooseBackgroundButton
+        let clearBackgroundButton = activeClearBackgroundButton
+
         let families = NSFontManager.shared.availableFontFamilies.sorted()
+        fontPicker.removeAllItems()
         fontPicker.addItems(withTitles: families)
         applyFontPreview(to: families)
 
@@ -240,6 +329,7 @@ final class DisplayOptionsViewController: NSViewController {
             fontPicker.selectItem(at: papyrusIndex)
         }
 
+        backgroundModePicker.removeAllItems()
         backgroundModePicker.addItems(withTitles: ["Solid Color", "Bundled Image", "Custom Image"])
         switch AppSettings.shared.backgroundMode {
         case .solid: backgroundModePicker.selectItem(at: 0)
@@ -247,15 +337,17 @@ final class DisplayOptionsViewController: NSViewController {
         case .customImage: backgroundModePicker.selectItem(at: 2)
         }
 
+        bundledBackgroundPicker.removeAllItems()
         bundledBackgroundPicker.addItems(withTitles: AppSettings.bundledBackgrounds.map(\.title))
         if let idx = AppSettings.bundledBackgrounds.firstIndex(where: { $0.fileName == AppSettings.shared.bundledBackgroundFileName }) {
             bundledBackgroundPicker.selectItem(at: idx)
         }
 
-        colorWell.color = AppSettings.shared.backgroundColor
-        foregroundWell.color = AppSettings.shared.foregroundColor
+        backgroundColorWell.color = AppSettings.shared.backgroundColor
+        fontColorWell.color = AppSettings.shared.foregroundColor
         fontSizeSlider.doubleValue = Double(AppSettings.shared.fontSize)
         fontSizeValueLabel.stringValue = "\(Int(AppSettings.shared.fontSize))"
+        animationStylePicker.removeAllItems()
         animationStylePicker.addItems(withTitles: AppSettings.AnimationStyle.allCases.map(\.title))
         if let styleIndex = AppSettings.AnimationStyle.allCases.firstIndex(of: AppSettings.shared.animationStyle) {
             animationStylePicker.selectItem(at: styleIndex)
@@ -263,6 +355,7 @@ final class DisplayOptionsViewController: NSViewController {
         baseTimeSlider.doubleValue = AppSettings.shared.baseQuoteSeconds
         baseTimeValueLabel.stringValue = String(format: "%.1f", AppSettings.shared.baseQuoteSeconds)
         showAttributionCheckbox.state = AppSettings.shared.showsAttribution ? .on : .off
+        quoteThemePicker.removeAllItems()
         quoteThemePicker.addItems(withTitles: AppSettings.bundledThemes.map(\.title))
         if let selectedIndex = AppSettings.bundledThemes.firstIndex(where: { $0.fileName == AppSettings.shared.bundledQuoteFileName }) {
             quoteThemePicker.selectItem(at: selectedIndex)
@@ -271,10 +364,10 @@ final class DisplayOptionsViewController: NSViewController {
 
         fontPicker.target = self
         fontPicker.action = #selector(fontDidChange(_:))
-        colorWell.target = self
-        colorWell.action = #selector(colorDidChange(_:))
-        foregroundWell.target = self
-        foregroundWell.action = #selector(foregroundDidChange(_:))
+        backgroundColorWell.target = self
+        backgroundColorWell.action = #selector(colorDidChange(_:))
+        fontColorWell.target = self
+        fontColorWell.action = #selector(foregroundDidChange(_:))
         fontSizeSlider.target = self
         fontSizeSlider.action = #selector(fontSizeDidChange(_:))
         animationStylePicker.target = self
@@ -304,6 +397,7 @@ final class DisplayOptionsViewController: NSViewController {
     /// Applies live font-face preview to font picker rows.
     /// - Parameter families: Ordered list of font family names.
     private func applyFontPreview(to families: [String]) {
+        let fontPicker = activeFontPicker
         for (index, family) in families.enumerated() {
             guard let item = fontPicker.item(at: index) else { continue }
             let previewFont = NSFont(name: family, size: 13) ?? NSFont.systemFont(ofSize: 13)
@@ -316,138 +410,137 @@ final class DisplayOptionsViewController: NSViewController {
 
     /// Lays out all display tab controls.
     private func configureLayout() {
-        view.addSubview(fontLabel)
-        view.addSubview(fontPicker)
-        view.addSubview(backgroundModeLabel)
-        view.addSubview(backgroundModePicker)
-        view.addSubview(bundledBackgroundLabel)
-        view.addSubview(bundledBackgroundPicker)
-        view.addSubview(customBackgroundPathLabel)
-        view.addSubview(chooseBackgroundButton)
-        view.addSubview(clearBackgroundButton)
-        view.addSubview(colorLabel)
-        view.addSubview(colorWell)
-        view.addSubview(foregroundLabel)
-        view.addSubview(foregroundWell)
-        view.addSubview(fontSizeLabel)
-        view.addSubview(fontSizeSlider)
-        view.addSubview(fontSizeValueLabel)
-        view.addSubview(animationStyleLabel)
-        view.addSubview(animationStylePicker)
-        view.addSubview(baseTimeLabel)
-        view.addSubview(baseTimeSlider)
-        view.addSubview(baseTimeValueLabel)
-        view.addSubview(showAttributionCheckbox)
-        view.addSubview(quoteFileLabel)
-        view.addSubview(quoteThemeLabel)
-        view.addSubview(quoteThemePicker)
-        view.addSubview(quoteFilePathLabel)
-        view.addSubview(chooseXMLButton)
-        view.addSubview(useBundledButton)
+        colorWell.widthAnchor.constraint(equalToConstant: 72).isActive = true
+        colorWell.heightAnchor.constraint(equalToConstant: 30).isActive = true
+        foregroundWell.widthAnchor.constraint(equalToConstant: 72).isActive = true
+        foregroundWell.heightAnchor.constraint(equalToConstant: 30).isActive = true
+        fontSizeValueLabel.widthAnchor.constraint(equalToConstant: 44).isActive = true
+        baseTimeValueLabel.widthAnchor.constraint(equalToConstant: 44).isActive = true
+
+        let rootStack = makeStack(orientation: .vertical, spacing: 16)
+        rootStack.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(rootStack)
+
+        let appearanceStack = makeStack(orientation: .vertical, spacing: 12)
+        appearanceStack.addArrangedSubview(makeFieldStack(label: fontLabel, control: fontPicker))
+        appearanceStack.addArrangedSubview(makeSliderFieldStack(label: fontSizeLabel, slider: fontSizeSlider, valueLabel: fontSizeValueLabel))
+        appearanceStack.addArrangedSubview(
+            makeStack(
+                orientation: .horizontal,
+                spacing: 18,
+                views: [
+                    makeFieldStack(label: colorLabel, control: colorWell),
+                    makeFieldStack(label: foregroundLabel, control: foregroundWell)
+                ]
+            )
+        )
+
+        let backgroundButtonsRow = makeStack(
+            orientation: .horizontal,
+            spacing: 10,
+            views: [chooseBackgroundButton, clearBackgroundButton]
+        )
+        backgroundButtonsRow.alignment = .centerY
+
+        let backgroundStack = makeStack(orientation: .vertical, spacing: 12)
+        backgroundStack.addArrangedSubview(makeFieldStack(label: backgroundModeLabel, control: backgroundModePicker))
+        backgroundStack.addArrangedSubview(makeFieldStack(label: bundledBackgroundLabel, control: bundledBackgroundPicker))
+        backgroundStack.addArrangedSubview(customBackgroundPathLabel)
+        backgroundStack.addArrangedSubview(backgroundButtonsRow)
+
+        let quotesButtonsRow = makeStack(
+            orientation: .horizontal,
+            spacing: 10,
+            views: [chooseXMLButton, useBundledButton]
+        )
+        quotesButtonsRow.alignment = .centerY
+
+        let quotesStack = makeStack(orientation: .vertical, spacing: 12)
+        quotesStack.addArrangedSubview(makeFieldStack(label: quoteThemeLabel, control: quoteThemePicker))
+        quotesStack.addArrangedSubview(makeFieldStack(label: quoteFileLabel, control: quoteFilePathLabel))
+        quotesStack.addArrangedSubview(quotesButtonsRow)
+
+        let playbackStack = makeStack(orientation: .vertical, spacing: 12)
+        playbackStack.addArrangedSubview(makeFieldStack(label: animationStyleLabel, control: animationStylePicker))
+        playbackStack.addArrangedSubview(makeSliderFieldStack(label: baseTimeLabel, slider: baseTimeSlider, valueLabel: baseTimeValueLabel))
+        playbackStack.addArrangedSubview(showAttributionCheckbox)
+
+        let appearanceSection = makeSectionView(title: "Appearance", content: appearanceStack)
+        let backgroundSection = makeSectionView(title: "Background", content: backgroundStack)
+        let quoteSourceSection = makeSectionView(title: "Quote Source", content: quotesStack)
+        let playbackSection = makeSectionView(title: "Playback", content: playbackStack)
+
+        rootStack.addArrangedSubview(appearanceSection)
+        rootStack.addArrangedSubview(backgroundSection)
+        rootStack.addArrangedSubview(quoteSourceSection)
+        rootStack.addArrangedSubview(playbackSection)
 
         NSLayoutConstraint.activate([
-            view.widthAnchor.constraint(equalToConstant: 440),
-            view.heightAnchor.constraint(equalToConstant: 785),
+            view.widthAnchor.constraint(equalToConstant: 500),
+            view.heightAnchor.constraint(equalToConstant: 760),
 
-            fontLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
-            fontLabel.topAnchor.constraint(equalTo: view.topAnchor, constant: 26),
+            rootStack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            rootStack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            rootStack.topAnchor.constraint(equalTo: view.topAnchor, constant: 20),
+            rootStack.bottomAnchor.constraint(lessThanOrEqualTo: view.bottomAnchor, constant: -20),
 
-            fontPicker.leadingAnchor.constraint(equalTo: fontLabel.leadingAnchor),
-            fontPicker.topAnchor.constraint(equalTo: fontLabel.bottomAnchor, constant: 10),
-            fontPicker.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
-
-            backgroundModeLabel.leadingAnchor.constraint(equalTo: fontLabel.leadingAnchor),
-            backgroundModeLabel.topAnchor.constraint(equalTo: fontPicker.bottomAnchor, constant: 24),
-
-            backgroundModePicker.leadingAnchor.constraint(equalTo: backgroundModeLabel.leadingAnchor),
-            backgroundModePicker.topAnchor.constraint(equalTo: backgroundModeLabel.bottomAnchor, constant: 10),
-            backgroundModePicker.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
-
-            bundledBackgroundLabel.leadingAnchor.constraint(equalTo: fontLabel.leadingAnchor),
-            bundledBackgroundLabel.topAnchor.constraint(equalTo: backgroundModePicker.bottomAnchor, constant: 16),
-
-            bundledBackgroundPicker.leadingAnchor.constraint(equalTo: bundledBackgroundLabel.leadingAnchor),
-            bundledBackgroundPicker.topAnchor.constraint(equalTo: bundledBackgroundLabel.bottomAnchor, constant: 8),
-            bundledBackgroundPicker.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
-
-            customBackgroundPathLabel.leadingAnchor.constraint(equalTo: fontLabel.leadingAnchor),
-            customBackgroundPathLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
-            customBackgroundPathLabel.topAnchor.constraint(equalTo: bundledBackgroundPicker.bottomAnchor, constant: 10),
-
-            chooseBackgroundButton.leadingAnchor.constraint(equalTo: fontLabel.leadingAnchor),
-            chooseBackgroundButton.topAnchor.constraint(equalTo: customBackgroundPathLabel.bottomAnchor, constant: 10),
-
-            clearBackgroundButton.leadingAnchor.constraint(equalTo: chooseBackgroundButton.trailingAnchor, constant: 10),
-            clearBackgroundButton.centerYAnchor.constraint(equalTo: chooseBackgroundButton.centerYAnchor),
-
-            colorLabel.leadingAnchor.constraint(equalTo: fontLabel.leadingAnchor),
-            colorLabel.topAnchor.constraint(equalTo: chooseBackgroundButton.bottomAnchor, constant: 18),
-
-            colorWell.leadingAnchor.constraint(equalTo: colorLabel.leadingAnchor),
-            colorWell.topAnchor.constraint(equalTo: colorLabel.bottomAnchor, constant: 10),
-            colorWell.widthAnchor.constraint(equalToConstant: 72),
-            colorWell.heightAnchor.constraint(equalToConstant: 30),
-
-            foregroundLabel.leadingAnchor.constraint(equalTo: fontLabel.leadingAnchor),
-            foregroundLabel.topAnchor.constraint(equalTo: colorWell.bottomAnchor, constant: 22),
-
-            foregroundWell.leadingAnchor.constraint(equalTo: foregroundLabel.leadingAnchor),
-            foregroundWell.topAnchor.constraint(equalTo: foregroundLabel.bottomAnchor, constant: 10),
-            foregroundWell.widthAnchor.constraint(equalToConstant: 72),
-            foregroundWell.heightAnchor.constraint(equalToConstant: 30),
-
-            fontSizeLabel.leadingAnchor.constraint(equalTo: fontLabel.leadingAnchor),
-            fontSizeLabel.topAnchor.constraint(equalTo: foregroundWell.bottomAnchor, constant: 22),
-
-            fontSizeSlider.leadingAnchor.constraint(equalTo: fontSizeLabel.leadingAnchor),
-            fontSizeSlider.topAnchor.constraint(equalTo: fontSizeLabel.bottomAnchor, constant: 10),
-            fontSizeSlider.trailingAnchor.constraint(equalTo: fontSizeValueLabel.leadingAnchor, constant: -10),
-
-            fontSizeValueLabel.centerYAnchor.constraint(equalTo: fontSizeSlider.centerYAnchor),
-            fontSizeValueLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
-            fontSizeValueLabel.widthAnchor.constraint(equalToConstant: 44),
-
-            animationStyleLabel.leadingAnchor.constraint(equalTo: fontLabel.leadingAnchor),
-            animationStyleLabel.topAnchor.constraint(equalTo: fontSizeSlider.bottomAnchor, constant: 20),
-
-            animationStylePicker.leadingAnchor.constraint(equalTo: animationStyleLabel.leadingAnchor),
-            animationStylePicker.topAnchor.constraint(equalTo: animationStyleLabel.bottomAnchor, constant: 10),
-            animationStylePicker.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
-
-            baseTimeLabel.leadingAnchor.constraint(equalTo: fontLabel.leadingAnchor),
-            baseTimeLabel.topAnchor.constraint(equalTo: animationStylePicker.bottomAnchor, constant: 20),
-
-            baseTimeSlider.leadingAnchor.constraint(equalTo: baseTimeLabel.leadingAnchor),
-            baseTimeSlider.topAnchor.constraint(equalTo: baseTimeLabel.bottomAnchor, constant: 10),
-            baseTimeSlider.trailingAnchor.constraint(equalTo: baseTimeValueLabel.leadingAnchor, constant: -10),
-
-            baseTimeValueLabel.centerYAnchor.constraint(equalTo: baseTimeSlider.centerYAnchor),
-            baseTimeValueLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
-            baseTimeValueLabel.widthAnchor.constraint(equalToConstant: 44),
-
-            showAttributionCheckbox.leadingAnchor.constraint(equalTo: baseTimeLabel.leadingAnchor),
-            showAttributionCheckbox.topAnchor.constraint(equalTo: baseTimeSlider.bottomAnchor, constant: 14),
-
-            quoteFileLabel.leadingAnchor.constraint(equalTo: fontLabel.leadingAnchor),
-            quoteFileLabel.topAnchor.constraint(equalTo: showAttributionCheckbox.bottomAnchor, constant: 18),
-
-            quoteThemeLabel.leadingAnchor.constraint(equalTo: quoteFileLabel.leadingAnchor),
-            quoteThemeLabel.topAnchor.constraint(equalTo: quoteFileLabel.bottomAnchor, constant: 10),
-
-            quoteThemePicker.leadingAnchor.constraint(equalTo: quoteThemeLabel.leadingAnchor),
-            quoteThemePicker.topAnchor.constraint(equalTo: quoteThemeLabel.bottomAnchor, constant: 8),
-            quoteThemePicker.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
-
-            quoteFilePathLabel.leadingAnchor.constraint(equalTo: quoteFileLabel.leadingAnchor),
-            quoteFilePathLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
-            quoteFilePathLabel.topAnchor.constraint(equalTo: quoteThemePicker.bottomAnchor, constant: 10),
-
-            chooseXMLButton.leadingAnchor.constraint(equalTo: quoteFileLabel.leadingAnchor),
-            chooseXMLButton.topAnchor.constraint(equalTo: quoteFilePathLabel.bottomAnchor, constant: 12),
-
-            useBundledButton.leadingAnchor.constraint(equalTo: chooseXMLButton.trailingAnchor, constant: 10),
-            useBundledButton.centerYAnchor.constraint(equalTo: chooseXMLButton.centerYAnchor)
+            appearanceSection.widthAnchor.constraint(equalTo: rootStack.widthAnchor),
+            backgroundSection.widthAnchor.constraint(equalTo: rootStack.widthAnchor),
+            quoteSourceSection.widthAnchor.constraint(equalTo: rootStack.widthAnchor),
+            playbackSection.widthAnchor.constraint(equalTo: rootStack.widthAnchor)
         ])
+    }
+
+    /// Builds a bordered section container with a title and padded content.
+    private func makeSectionView(title: String, content: NSView) -> NSView {
+        let container = NSView()
+        container.wantsLayer = true
+        container.layer?.cornerRadius = 8
+        container.layer?.borderWidth = 1
+        container.layer?.borderColor = NSColor.separatorColor.cgColor
+        container.translatesAutoresizingMaskIntoConstraints = false
+
+        let titleLabel = NSTextField(labelWithString: title)
+        titleLabel.font = .systemFont(ofSize: 13, weight: .semibold)
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+
+        container.addSubview(titleLabel)
+        container.addSubview(content)
+
+        NSLayoutConstraint.activate([
+            titleLabel.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 14),
+            titleLabel.topAnchor.constraint(equalTo: container.topAnchor, constant: 12),
+
+            content.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 14),
+            content.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -14),
+            content.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 10),
+            content.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -14)
+        ])
+
+        return container
+    }
+
+    /// Builds a standard label/control field stack.
+    private func makeFieldStack(label: NSTextField, control: NSView) -> NSStackView {
+        makeStack(orientation: .vertical, spacing: 8, views: [label, control])
+    }
+
+    /// Builds a slider row with a trailing numeric value label.
+    private func makeSliderFieldStack(label: NSTextField, slider: NSSlider, valueLabel: NSTextField) -> NSStackView {
+        let row = makeStack(orientation: .horizontal, spacing: 10, views: [slider, valueLabel])
+        row.alignment = .centerY
+        return makeStack(orientation: .vertical, spacing: 8, views: [label, row])
+    }
+
+    /// Builds a configured stack view with optional arranged subviews.
+    private func makeStack(orientation: NSUserInterfaceLayoutOrientation, spacing: CGFloat, views: [NSView] = []) -> NSStackView {
+        let stack = NSStackView(views: views)
+        stack.orientation = orientation
+        stack.spacing = spacing
+        stack.alignment = (orientation == .vertical) ? .width : .top
+        stack.distribution = .fill
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        return stack
     }
 
     /// Font picker handler.
@@ -476,7 +569,7 @@ final class DisplayOptionsViewController: NSViewController {
         AppSettings.shared.updateBundledBackgroundFileName(selected.fileName)
         if AppSettings.shared.backgroundMode != .bundledImage {
             AppSettings.shared.updateBackgroundMode(.bundledImage)
-            backgroundModePicker.selectItem(at: 1)
+            activeBackgroundModePicker.selectItem(at: 1)
             refreshBackgroundControlState()
         }
     }
@@ -494,7 +587,7 @@ final class DisplayOptionsViewController: NSViewController {
         if panel.runModal() == .OK, let url = panel.url {
             AppSettings.shared.updateCustomBackgroundFilePath(url.path)
             AppSettings.shared.updateBackgroundMode(.customImage)
-            backgroundModePicker.selectItem(at: 2)
+            activeBackgroundModePicker.selectItem(at: 2)
             refreshBackgroundPathLabel()
             refreshBackgroundControlState()
         }
@@ -505,7 +598,7 @@ final class DisplayOptionsViewController: NSViewController {
         AppSettings.shared.updateCustomBackgroundFilePath(nil)
         if AppSettings.shared.backgroundMode == .customImage {
             AppSettings.shared.updateBackgroundMode(.solid)
-            backgroundModePicker.selectItem(at: 0)
+            activeBackgroundModePicker.selectItem(at: 0)
         }
         refreshBackgroundPathLabel()
         refreshBackgroundControlState()
@@ -525,7 +618,7 @@ final class DisplayOptionsViewController: NSViewController {
     @objc private func fontSizeDidChange(_ sender: NSSlider) {
         let rounded = CGFloat(Int(sender.doubleValue.rounded()))
         sender.doubleValue = Double(rounded)
-        fontSizeValueLabel.stringValue = "\(Int(rounded))"
+        activeFontSizeValueLabel.stringValue = "\(Int(rounded))"
         AppSettings.shared.updateFontSize(rounded)
     }
 
@@ -541,7 +634,7 @@ final class DisplayOptionsViewController: NSViewController {
     @objc private func baseTimeDidChange(_ sender: NSSlider) {
         let rounded = (sender.doubleValue * 2).rounded() / 2
         sender.doubleValue = rounded
-        baseTimeValueLabel.stringValue = String(format: "%.1f", rounded)
+        activeBaseTimeValueLabel.stringValue = String(format: "%.1f", rounded)
         AppSettings.shared.updateBaseQuoteSeconds(rounded)
     }
 
@@ -587,28 +680,28 @@ final class DisplayOptionsViewController: NSViewController {
     /// Refreshes quote source path label based on custom/bundled selection.
     private func refreshQuoteFilePathLabel() {
         if let path = AppSettings.shared.customQuoteFilePath, !path.isEmpty {
-            quoteFilePathLabel.stringValue = path
+            activeQuoteFilePathLabel.stringValue = path
         } else {
             let file = AppSettings.shared.bundledQuoteFileName
-            quoteFilePathLabel.stringValue = "Using bundled \(file)"
+            activeQuoteFilePathLabel.stringValue = "Using bundled \(file)"
         }
     }
 
     /// Refreshes custom background path label.
     private func refreshBackgroundPathLabel() {
         if let path = AppSettings.shared.customBackgroundFilePath, !path.isEmpty {
-            customBackgroundPathLabel.stringValue = path
+            activeCustomBackgroundPathLabel.stringValue = path
         } else {
-            customBackgroundPathLabel.stringValue = "No custom image selected"
+            activeCustomBackgroundPathLabel.stringValue = "No custom image selected"
         }
     }
 
     /// Enables/disables background-related controls based on selected mode.
     private func refreshBackgroundControlState() {
         let mode = AppSettings.shared.backgroundMode
-        colorWell.isEnabled = (mode == .solid)
-        bundledBackgroundPicker.isEnabled = (mode == .bundledImage)
-        chooseBackgroundButton.isEnabled = true
-        clearBackgroundButton.isEnabled = (AppSettings.shared.customBackgroundFilePath != nil)
+        activeBackgroundColorWell.isEnabled = (mode == .solid)
+        activeBundledBackgroundPicker.isEnabled = (mode == .bundledImage)
+        activeChooseBackgroundButton.isEnabled = true
+        activeClearBackgroundButton.isEnabled = (AppSettings.shared.customBackgroundFilePath != nil)
     }
 }

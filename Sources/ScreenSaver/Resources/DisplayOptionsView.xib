@@ -1,0 +1,404 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="24765" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="24765"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner" customClass="DisplayOptionsViewController">
+            <connections>
+                <outlet property="view" destination="root-view" id="owner-view-1"/>
+                <outlet property="xibAnimationStylePicker" destination="animation-style-picker" id="owner-animation-style-picker"/>
+                <outlet property="xibBackgroundColorWell" destination="background-color-well" id="owner-background-color-well"/>
+                <outlet property="xibBackgroundModePicker" destination="background-mode-picker" id="owner-background-mode-picker"/>
+                <outlet property="xibBaseTimeSlider" destination="base-time-slider" id="owner-base-time-slider"/>
+                <outlet property="xibBaseTimeValueLabel" destination="base-time-value-label" id="owner-base-time-value-label"/>
+                <outlet property="xibBundledBackgroundPicker" destination="bundled-background-picker" id="owner-bundled-background-picker"/>
+                <outlet property="xibChooseBackgroundButton" destination="choose-background-button" id="owner-choose-background-button"/>
+                <outlet property="xibChooseXMLButton" destination="choose-xml-button" id="owner-choose-xml-button"/>
+                <outlet property="xibClearBackgroundButton" destination="clear-background-button" id="owner-clear-background-button"/>
+                <outlet property="xibCustomBackgroundPathLabel" destination="custom-background-path-label" id="owner-custom-background-path-label"/>
+                <outlet property="xibFontColorWell" destination="font-color-well" id="owner-font-color-well"/>
+                <outlet property="xibFontPicker" destination="font-picker" id="owner-font-picker"/>
+                <outlet property="xibFontSizeSlider" destination="font-size-slider" id="owner-font-size-slider"/>
+                <outlet property="xibFontSizeValueLabel" destination="font-size-value-label" id="owner-font-size-value-label"/>
+                <outlet property="xibQuoteFilePathLabel" destination="quote-file-path-label" id="owner-quote-file-path-label"/>
+                <outlet property="xibQuoteThemePicker" destination="quote-theme-picker" id="owner-quote-theme-picker"/>
+                <outlet property="xibShowAttributionCheckbox" destination="show-attribution-checkbox" id="owner-show-attribution-checkbox"/>
+                <outlet property="xibUseBundledButton" destination="use-bundled-button" id="owner-use-bundled-button"/>
+            </connections>
+        </customObject>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
+        <view wantsLayer="YES" translatesAutoresizingMaskIntoConstraints="NO" id="root-view">
+            <rect key="frame" x="0.0" y="0.0" width="506" height="760"/>
+            <subviews>
+                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="title-appearance">
+                    <rect key="frame" x="24" y="706" width="82" height="20"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <textFieldCell key="cell" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Appearance" id="cell-appearance">
+                        <font key="font" metaFont="systemBold"/>
+                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+                <box fixedFrame="YES" title=" " titlePosition="noTitle" translatesAutoresizingMaskIntoConstraints="NO" id="box-appearance">
+                    <rect key="frame" x="20" y="560" width="460" height="140"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                </box>
+                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="title-background">
+                    <rect key="frame" x="24" y="532" width="84" height="20"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <textFieldCell key="cell" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Background" id="cell-background">
+                        <font key="font" metaFont="systemBold"/>
+                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+                <box fixedFrame="YES" title=" " titlePosition="noTitle" translatesAutoresizingMaskIntoConstraints="NO" id="box-background">
+                    <rect key="frame" x="20" y="352" width="460" height="174"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                </box>
+                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="title-quote-source">
+                    <rect key="frame" x="24" y="318" width="93" height="20"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <textFieldCell key="cell" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Quote Source" id="cell-quote-source">
+                        <font key="font" metaFont="systemBold"/>
+                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+                <box fixedFrame="YES" title=" " titlePosition="noTitle" translatesAutoresizingMaskIntoConstraints="NO" id="box-quote-source">
+                    <rect key="frame" x="20" y="192" width="460" height="126"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                </box>
+                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="title-playback">
+                    <rect key="frame" x="24" y="159" width="66" height="20"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <textFieldCell key="cell" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Playback" id="cell-playback">
+                        <font key="font" metaFont="systemBold"/>
+                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+                <box fixedFrame="YES" title=" " titlePosition="noTitle" translatesAutoresizingMaskIntoConstraints="NO" id="box-playback">
+                    <rect key="frame" x="20" y="18" width="460" height="140"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                </box>
+                <textField fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="font-label">
+                    <rect key="frame" x="38" y="666" width="36" height="17"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <textFieldCell key="cell" lineBreakMode="truncatingTail" title="Font" id="font-label-cell">
+                        <font key="font" metaFont="system"/>
+                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+                <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="font-picker">
+                    <rect key="frame" x="160" y="660" width="292" height="26"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMinY="YES"/>
+                    <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" id="font-picker-cell">
+                        <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                        <font key="font" metaFont="message"/>
+                        <menu key="menu" id="font-picker-menu">
+                            <items>
+                                <menuItem title="Papyrus" id="font-picker-item-papyrus"/>
+                                <menuItem title="Helvetica" id="font-picker-item-helvetica"/>
+                                <menuItem title="Baskerville" id="font-picker-item-baskerville"/>
+                            </items>
+                        </menu>
+                    </popUpButtonCell>
+                    <connections>
+                        <action selector="fontDidChange:" target="-2" id="action-fontDidChange"/>
+                    </connections>
+                </popUpButton>
+                <textField fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="font-size-label">
+                    <rect key="frame" x="38" y="630" width="85" height="17"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <textFieldCell key="cell" lineBreakMode="truncatingTail" title="Font Size" id="font-size-label-cell">
+                        <font key="font" metaFont="system"/>
+                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+                <slider verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="font-size-slider">
+                    <rect key="frame" x="160" y="624" width="240" height="24"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMinY="YES"/>
+                    <sliderCell key="cell" continuous="YES" alignment="left" minValue="18" maxValue="140" doubleValue="48" tickMarkPosition="below" sliderType="linear" id="font-size-slider-cell"/>
+                    <connections>
+                        <action selector="fontSizeDidChange:" target="-2" id="action-fontSizeDidChange"/>
+                    </connections>
+                </slider>
+                <textField fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="font-size-value-label">
+                    <rect key="frame" x="414" y="630" width="36" height="17"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                    <textFieldCell key="cell" lineBreakMode="truncatingTail" alignment="right" title="48" id="font-size-value-label-cell">
+                        <font key="font" metaFont="system"/>
+                        <color key="textColor" name="secondaryLabelColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+                <textField fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="background-color-label">
+                    <rect key="frame" x="38" y="454" width="120" height="17"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <textFieldCell key="cell" lineBreakMode="truncatingTail" title="Background Color" id="background-color-label-cell">
+                        <font key="font" metaFont="system"/>
+                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+                <colorWell fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="background-color-well">
+                    <rect key="frame" x="175" y="448" width="112" height="30"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <color key="color" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                    <connections>
+                        <action selector="colorDidChange:" target="-2" id="action-colorDidChange"/>
+                    </connections>
+                </colorWell>
+                <textField fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="font-color-label">
+                    <rect key="frame" x="36" y="594" width="79" height="17"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <textFieldCell key="cell" lineBreakMode="truncatingTail" title="Font Color" id="font-color-label-cell">
+                        <font key="font" metaFont="system"/>
+                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+                <colorWell fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="font-color-well">
+                    <rect key="frame" x="174" y="588" width="106" height="30"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <color key="color" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                    <connections>
+                        <action selector="foregroundDidChange:" target="-2" id="action-foregroundDidChange"/>
+                    </connections>
+                </colorWell>
+                <textField fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="background-mode-label">
+                    <rect key="frame" x="38" y="492" width="130" height="17"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <textFieldCell key="cell" lineBreakMode="truncatingTail" title="Background Mode" id="background-mode-label-cell">
+                        <font key="font" metaFont="system"/>
+                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+                <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="background-mode-picker">
+                    <rect key="frame" x="174" y="486" width="278" height="26"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMinY="YES"/>
+                    <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" id="background-mode-picker-cell">
+                        <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                        <font key="font" metaFont="message"/>
+                        <menu key="menu" id="background-mode-picker-menu">
+                            <items>
+                                <menuItem title="Solid Color" id="background-mode-item-solid"/>
+                                <menuItem title="Bundled Image" id="background-mode-item-bundled"/>
+                                <menuItem title="Custom Image" id="background-mode-item-custom"/>
+                            </items>
+                        </menu>
+                    </popUpButtonCell>
+                    <connections>
+                        <action selector="backgroundModeDidChange:" target="-2" id="action-backgroundModeDidChange"/>
+                    </connections>
+                </popUpButton>
+                <textField fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="bundled-background-label">
+                    <rect key="frame" x="38" y="420" width="130" height="17"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <textFieldCell key="cell" lineBreakMode="truncatingTail" title="Bundled Background" id="bundled-background-label-cell">
+                        <font key="font" metaFont="system"/>
+                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+                <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="bundled-background-picker">
+                    <rect key="frame" x="174" y="414" width="278" height="26"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMinY="YES"/>
+                    <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" id="bundled-background-picker-cell">
+                        <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                        <font key="font" metaFont="message"/>
+                        <menu key="menu" id="bundled-background-picker-menu">
+                            <items>
+                                <menuItem title="Sidebar Off" id="bundled-background-item-off"/>
+                                <menuItem title="Sidebar On" id="bundled-background-item-on"/>
+                                <menuItem title="Aurora" id="bundled-background-item-aurora"/>
+                            </items>
+                        </menu>
+                    </popUpButtonCell>
+                    <connections>
+                        <action selector="bundledBackgroundDidChange:" target="-2" id="action-bundledBackgroundDidChange"/>
+                    </connections>
+                </popUpButton>
+                <textField fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="custom-background-label">
+                    <rect key="frame" x="38" y="390" width="108" height="17"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <textFieldCell key="cell" lineBreakMode="truncatingTail" title="Custom Image" id="custom-background-label-cell">
+                        <font key="font" metaFont="system"/>
+                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+                <textField fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="custom-background-path-label">
+                    <rect key="frame" x="160" y="390" width="292" height="17"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMinY="YES"/>
+                    <textFieldCell key="cell" lineBreakMode="truncatingMiddle" title="No custom image selected" id="custom-background-path-label-cell">
+                        <font key="font" metaFont="system"/>
+                        <color key="textColor" name="secondaryLabelColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+                <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="choose-background-button">
+                    <rect key="frame" x="160" y="358" width="120" height="32"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <buttonCell key="cell" type="push" title="Choose Image..." bezelStyle="rounded" alignment="center" borderStyle="borderAndBezel" inset="2" id="choose-background-button-cell">
+                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                        <font key="font" metaFont="system"/>
+                    </buttonCell>
+                    <connections>
+                        <action selector="chooseBackgroundImage:" target="-2" id="action-chooseBackgroundImage"/>
+                    </connections>
+                </button>
+                <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="clear-background-button">
+                    <rect key="frame" x="288" y="358" width="120" height="32"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <buttonCell key="cell" type="push" title="Clear Custom" bezelStyle="rounded" alignment="center" borderStyle="borderAndBezel" inset="2" id="clear-background-button-cell">
+                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                        <font key="font" metaFont="system"/>
+                    </buttonCell>
+                    <connections>
+                        <action selector="clearCustomBackground:" target="-2" id="action-clearCustomBackground"/>
+                    </connections>
+                </button>
+                <textField fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="quote-theme-label">
+                    <rect key="frame" x="38" y="283" width="68" height="17"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <textFieldCell key="cell" lineBreakMode="truncatingTail" title="Theme" id="quote-theme-label-cell">
+                        <font key="font" metaFont="system"/>
+                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+                <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="quote-theme-picker">
+                    <rect key="frame" x="160" y="277" width="292" height="26"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMinY="YES"/>
+                    <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" id="quote-theme-picker-cell">
+                        <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                        <font key="font" metaFont="message"/>
+                        <menu key="menu" id="quote-theme-picker-menu">
+                            <items>
+                                <menuItem title="Mixed" id="quote-theme-item-mixed"/>
+                                <menuItem title="Stoicism" id="quote-theme-item-stoicism"/>
+                                <menuItem title="Leadership" id="quote-theme-item-leadership"/>
+                            </items>
+                        </menu>
+                    </popUpButtonCell>
+                    <connections>
+                        <action selector="themeDidChange:" target="-2" id="action-themeDidChange"/>
+                    </connections>
+                </popUpButton>
+                <textField fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="quote-file-label">
+                    <rect key="frame" x="38" y="247" width="108" height="17"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <textFieldCell key="cell" lineBreakMode="truncatingTail" title="Quote XML File" id="quote-file-label-cell">
+                        <font key="font" metaFont="system"/>
+                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+                <textField fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="quote-file-path-label">
+                    <rect key="frame" x="160" y="247" width="292" height="17"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMinY="YES"/>
+                    <textFieldCell key="cell" lineBreakMode="truncatingMiddle" title="Using bundled quotes.xml" id="quote-file-path-label-cell">
+                        <font key="font" metaFont="system"/>
+                        <color key="textColor" name="secondaryLabelColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+                <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="choose-xml-button">
+                    <rect key="frame" x="160" y="193" width="120" height="32"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <buttonCell key="cell" type="push" title="Choose XML..." bezelStyle="rounded" alignment="center" borderStyle="borderAndBezel" inset="2" id="choose-xml-button-cell">
+                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                        <font key="font" metaFont="system"/>
+                    </buttonCell>
+                    <connections>
+                        <action selector="chooseXMLFile:" target="-2" id="action-chooseXMLFile"/>
+                    </connections>
+                </button>
+                <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="use-bundled-button">
+                    <rect key="frame" x="288" y="193" width="120" height="32"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <buttonCell key="cell" type="push" title="Use Bundled" bezelStyle="rounded" alignment="center" borderStyle="borderAndBezel" inset="2" id="use-bundled-button-cell">
+                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                        <font key="font" metaFont="system"/>
+                    </buttonCell>
+                    <connections>
+                        <action selector="useBundledQuotes:" target="-2" id="action-useBundledQuotes"/>
+                    </connections>
+                </button>
+                <textField fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="animation-style-label">
+                    <rect key="frame" x="38" y="124" width="116" height="17"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <textFieldCell key="cell" lineBreakMode="truncatingTail" title="Animation Style" id="animation-style-label-cell">
+                        <font key="font" metaFont="system"/>
+                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+                <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="animation-style-picker">
+                    <rect key="frame" x="213" y="118" width="239" height="26"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMinY="YES"/>
+                    <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" id="animation-style-picker-cell">
+                        <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                        <font key="font" metaFont="message"/>
+                        <menu key="menu" id="animation-style-picker-menu">
+                            <items>
+                                <menuItem title="Fade" id="animation-style-item-fade"/>
+                                <menuItem title="Materialize" id="animation-style-item-materialize"/>
+                                <menuItem title="Random Transition" id="animation-style-item-random"/>
+                            </items>
+                        </menu>
+                    </popUpButtonCell>
+                    <connections>
+                        <action selector="animationStyleDidChange:" target="-2" id="action-animationStyleDidChange"/>
+                    </connections>
+                </popUpButton>
+                <textField fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="base-time-label">
+                    <rect key="frame" x="38" y="88" width="149" height="17"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <textFieldCell key="cell" lineBreakMode="truncatingTail" title="Base Quote Time (sec)" id="base-time-label-cell">
+                        <font key="font" metaFont="system"/>
+                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+                <textField fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="base-time-value-label">
+                    <rect key="frame" x="423" y="88" width="36" height="17"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                    <textFieldCell key="cell" lineBreakMode="truncatingTail" alignment="right" title="5.0" id="base-time-value-label-cell">
+                        <font key="font" metaFont="system"/>
+                        <color key="textColor" name="secondaryLabelColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+                <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="show-attribution-checkbox">
+                    <rect key="frame" x="160" y="46" width="212" height="18"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <buttonCell key="cell" type="bevel" title="Show Attribution (bottom-right)" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="show-attribution-checkbox-cell">
+                        <behavior key="behavior" lightByBackground="YES" changeContents="YES" doesNotDimImage="YES"/>
+                        <font key="font" metaFont="system"/>
+                    </buttonCell>
+                    <connections>
+                        <action selector="showAttributionDidChange:" target="-2" id="action-showAttributionDidChange"/>
+                    </connections>
+                </button>
+                <slider verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="base-time-slider">
+                    <rect key="frame" x="213" y="82" width="220" height="24"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMinY="YES"/>
+                    <sliderCell key="cell" continuous="YES" alignment="left" minValue="3" maxValue="20" doubleValue="5" tickMarkPosition="below" sliderType="linear" id="base-time-slider-cell"/>
+                    <connections>
+                        <action selector="baseTimeDidChange:" target="-2" id="action-baseTimeDidChange"/>
+                    </connections>
+                </slider>
+            </subviews>
+            <point key="canvasLocation" x="142" y="154"/>
+        </view>
+    </objects>
+</document>

@@ -29,6 +29,15 @@ struct Quote: Equatable {
         body.split { !$0.isLetter && !$0.isNumber }.count
     }
 
+    /// Returns the preferred display font for this quote, falling back to the
+    /// runtime-selected font when no XML font suggestion is present.
+    /// - Parameter fallback: Font chosen in app settings.
+    /// - Returns: XML-suggested font when non-empty; otherwise `fallback`.
+    func preferredFontName(fallback: String) -> String {
+        let suggested = font?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return suggested.isEmpty ? fallback : suggested
+    }
+
     /// Recommends quote display duration based on word count.
     ///
     /// Uses a base duration at 7 words and scales linearly beyond that with a cap.
@@ -219,9 +228,9 @@ struct QuoteDeck {
             drawIndex = 0
         }
 
-        let quote = quotes[drawOrder[drawIndex]]
+        let quoteIndex = drawOrder[drawIndex]
         drawIndex += 1
-        return quote
+        return quotes[quoteIndex]
     }
 
     /// Loads initial runtime quotes with fallback order.

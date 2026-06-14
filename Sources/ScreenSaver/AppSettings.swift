@@ -41,6 +41,7 @@ final class AppSettings {
 
     static let bundledThemes: [BundledTheme] = [
         BundledTheme(title: "Mixed (Default)", fileName: "quotes.xml"),
+        BundledTheme(title: "Generic", fileName: "generic-quotes.xml"),
         BundledTheme(title: "Leadership", fileName: "leadership-quotes.xml"),
         BundledTheme(title: "Stoicism", fileName: "stoicism-quotes.xml"),
         BundledTheme(title: "Comedic", fileName: "comedic-quotes.xml"),

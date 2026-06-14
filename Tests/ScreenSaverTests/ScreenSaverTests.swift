@@ -147,6 +147,16 @@ import Testing
     #expect(medium.recommendedDisplayDuration(baseSeconds: 6.0) == 9.0)
 }
 
+@Test func quotePreferredFontNameUsesXMLSuggestionWhenPresent() {
+    let quoteWithFont = Quote(body: "Body", author: "Author", font: "Didot")
+    let quoteWithoutFont = Quote(body: "Body", author: "Author", font: nil)
+    let quoteWithBlankFont = Quote(body: "Body", author: "Author", font: "   ")
+
+    #expect(quoteWithFont.preferredFontName(fallback: "Papyrus") == "Didot")
+    #expect(quoteWithoutFont.preferredFontName(fallback: "Papyrus") == "Papyrus")
+    #expect(quoteWithBlankFont.preferredFontName(fallback: "Papyrus") == "Papyrus")
+}
+
 @Test func animationStylesExposeAllMilestoneModes() {
     let styles = AppSettings.AnimationStyle.allCases
     #expect(styles.count == 7)
