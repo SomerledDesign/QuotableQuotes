@@ -234,6 +234,10 @@ Ship the first usable Quoteable Quotes `.saver` release:
   - README now points users to `https://github.com/SomerledDesign/QuotableQuotes/releases/latest`.
   - `docs/releases/v1.0.0.md` now uses GitHub-safe release/download/install wording.
   - Existing `v1.0.0` tag remains anchored at `bf15102`.
+- GitHub release v1.0.0 published:
+  - Created formal GitHub Release at `https://github.com/SomerledDesign/QuotableQuotes/releases/tag/v1.0.0`.
+  - Uploaded release asset `QuoteableQuotes-v1.0.0.saver.zip`.
+  - Verified `https://github.com/SomerledDesign/QuotableQuotes/releases/latest` redirects to `v1.0.0`.
 
 ## Build Status
 - Last successful XIB compile command: `scripts/compile-options-xib.sh`
