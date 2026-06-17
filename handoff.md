@@ -242,6 +242,8 @@ Ship Quoteable Quotes `.saver` v1.0.1:
   - Added `docs/releases/v1.0.1.md` with Kevin Samuels, saver-loading, and proposed-font switch changes.
   - Updated install documentation and README release-note pointer for v1.0.1.
   - Built `dist/QuoteableQuotes.saver` and generated `dist/QuoteableQuotes-v1.0.1.saver.zip`.
+- README v1.0.1 follow-up:
+  - Added a top-level "What's New in v1.0.1" section to the primary `README.md` so the Kevin Samuels and proposed-font switch changes are visible without opening release notes.
 - Milestone 6 complete: resources cleanup + `.saver` packaging
   - Updated bundled background references to `Resources/images/*` paths.
   - Updated bundled image loading logic to resolve subdirectory assets correctly.

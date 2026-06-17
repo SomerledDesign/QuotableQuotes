@@ -2,6 +2,15 @@
 
 macOS quote screensaver prototype built with Swift Package Manager.
 
+## What's New in v1.0.1
+
+- Added a bundled Kevin Samuels quote library with 200 paraphrased thematic entries.
+- Fixed `.saver` quote loading for the Kevin Samuels theme, including saved theme aliases and the prior `kevin-samauels` misspelling.
+- Added a persisted `Use Proposed Font?` setting for XML `<font>` suggestions.
+- Replaced the proposed-font checkbox-style control with a real switch, left-justified label, and grey proposed-font name.
+- Shows the active proposed font beside the switch, such as `Avenir Next Condensed` for the Kevin Samuels pack.
+- Improved font resolution so XML font suggestions can match both exact font names and installed font families.
+
 ## Prerequisites
 - macOS
 - Xcode command line tools (`swift` available in shell)
