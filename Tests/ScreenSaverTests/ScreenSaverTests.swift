@@ -108,6 +108,17 @@ import Testing
     }
 }
 
+@MainActor
+@Test func kevinSamuelsLibraryContainsTwoHundredParaphrasedUniqueQuotes() throws {
+    let quotes = try QuoteRepository.loadBundledQuotes(named: "kevin-samuels-quotes.xml")
+    #expect(quotes.count == 200)
+    #expect(Set(quotes.map(\.body)).count == 200)
+    #expect(Set(quotes.compactMap(\.theme)) == Set(["kevin-samuels"]))
+    #expect(Set(quotes.map(\.author)) == Set(["Kevin Samuels (paraphrased)"]))
+    #expect(quotes.allSatisfy { $0.attribution?.contains("not verified verbatim") == true })
+    #expect(AppSettings.bundledThemes.contains { $0.fileName == "kevin-samuels-quotes.xml" })
+}
+
 @Test func stoicismLibraryIncludesArthurSchopenhauer() throws {
     let quotes = try QuoteRepository.loadBundledQuotes(named: "stoicism-quotes.xml")
     let schopenhauerQuotes = quotes.filter { $0.author == "Arthur Schopenhauer" }
@@ -153,6 +164,7 @@ import Testing
     let quoteWithBlankFont = Quote(body: "Body", author: "Author", font: "   ")
 
     #expect(quoteWithFont.preferredFontName(fallback: "Papyrus") == "Didot")
+    #expect(quoteWithFont.preferredFontName(fallback: "Papyrus", useProposedFont: false) == "Papyrus")
     #expect(quoteWithoutFont.preferredFontName(fallback: "Papyrus") == "Papyrus")
     #expect(quoteWithBlankFont.preferredFontName(fallback: "Papyrus") == "Papyrus")
 }

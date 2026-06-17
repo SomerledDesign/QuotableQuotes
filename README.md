@@ -63,6 +63,7 @@ Use `ScreenSaver -> Options...` in standalone app, or `Options...` in Screen Sav
 
 Implemented options:
 - Font family picker (with live font-face preview in dropdown)
+- `Use Proposed Font?` switch with the active XML `<font>` suggestion shown beside it
 - Font color picker
 - Font size slider
 - Background mode:
@@ -101,6 +102,7 @@ Bundled libraries:
 - `quotes.xml` (mixed sample, 100 total)
 - `generic-quotes.xml` (generic sample, 33 total)
 - `leadership-quotes.xml` (100 total)
+- `kevin-samuels-quotes.xml` (200 total, paraphrased thematic entries)
 - `stoicism-quotes.xml` (100 total, now includes Arthur Schopenhauer)
 - `comedic-quotes.xml` (100 total)
 - `greek-philosophers-quotes.xml` (100 total)
@@ -110,6 +112,7 @@ Runtime behavior:
 - Quotes are randomized.
 - No repeats until the full selected set is shown.
 - Dynamic timing scales from the configured base time.
+- XML `<font>` values are used only when `Use Proposed Font?` is enabled.
 
 ## Test
 
@@ -127,4 +130,4 @@ swift test
 
 Latest GitHub release: https://github.com/SomerledDesign/QuotableQuotes/releases/latest
 
-The checked-in v1.0.0 release notes source is [docs/releases/v1.0.0.md](docs/releases/v1.0.0.md).
+The checked-in v1.0.1 release notes source is [docs/releases/v1.0.1.md](docs/releases/v1.0.1.md).

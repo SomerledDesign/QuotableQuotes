@@ -9,7 +9,7 @@ Quoteable Quotes ships as a macOS `.saver` bundle.
 
 ## Install From a Release
 
-1. Download `QuoteableQuotes-v1.0.0.saver.zip` from the release page.
+1. Download `QuoteableQuotes-v1.0.1.saver.zip` from the release page.
 2. Unzip it.
 3. Double-click `QuoteableQuotes.saver`.
 4. Choose whether to install it for the current user.

@@ -33,7 +33,8 @@ struct Quote: Equatable {
     /// runtime-selected font when no XML font suggestion is present.
     /// - Parameter fallback: Font chosen in app settings.
     /// - Returns: XML-suggested font when non-empty; otherwise `fallback`.
-    func preferredFontName(fallback: String) -> String {
+    func preferredFontName(fallback: String, useProposedFont: Bool = true) -> String {
+        guard useProposedFont else { return fallback }
         let suggested = font?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         return suggested.isEmpty ? fallback : suggested
     }

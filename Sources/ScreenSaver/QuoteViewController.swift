@@ -244,9 +244,18 @@ final class QuoteViewController: NSViewController {
         let settings = AppSettings.shared
         let quoteSize = settings.fontSize
         let authorSize = max(14, round(quoteSize * 0.58))
-        let resolvedFontName = quote.preferredFontName(fallback: settings.fontName)
-        let quoteFont = NSFont(name: resolvedFontName, size: quoteSize) ?? NSFont.systemFont(ofSize: quoteSize, weight: .medium)
-        let authorFont = NSFont(name: resolvedFontName, size: authorSize) ?? NSFont.systemFont(ofSize: authorSize, weight: .regular)
+        let resolvedFontName = quote.preferredFontName(
+            fallback: settings.fontName,
+            useProposedFont: settings.useProposedFont
+        )
+        let quoteFont =
+            NSFont(name: resolvedFontName, size: quoteSize)
+            ?? NSFontManager.shared.font(withFamily: resolvedFontName, traits: [], weight: 5, size: quoteSize)
+            ?? NSFont.systemFont(ofSize: quoteSize, weight: .medium)
+        let authorFont =
+            NSFont(name: resolvedFontName, size: authorSize)
+            ?? NSFontManager.shared.font(withFamily: resolvedFontName, traits: [], weight: 5, size: authorSize)
+            ?? NSFont.systemFont(ofSize: authorSize, weight: .regular)
 
         let paragraph = NSMutableParagraphStyle()
         paragraph.alignment = .center

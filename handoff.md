@@ -4,29 +4,29 @@
 Swift Package Manager Mode
 
 ## Current Milestone
-Release v1.0.0 packaging and publication
+Release v1.0.1 packaging and publication
 
 ### Phase
 1. Goal  
-Ship the first usable Quoteable Quotes `.saver` release:
+Ship Quoteable Quotes `.saver` v1.0.1:
 - validate the current Swift/macOS baseline
-- build the release `.saver` bundle
-- create small install/wiki documentation
-- prepare repo release-page content
+- build and package the v1.0.1 `.saver` bundle
+- document Kevin Samuels/proposed-font changes in release notes
 - commit the release-ready workspace
+- push the new commit and release upstream
 
 2. Constraints  
 - Keep project buildable at all times.  
 - No speculative dependencies.  
 - Keep release documentation concise and tied to the current bundle behavior.
 - Preserve current working defaults when custom inputs are absent.
+- Do not rewrite existing release tags.
 
 3. Files to Modify  
 - `README.md`
-- `ACTIVE_CONTEXT.md`
 - `SaverBundle/Info.plist`
 - `docs/wiki/Installation.md`
-- `docs/releases/v1.0.0.md`
+- `docs/releases/v1.0.1.md`
 - `handoff.md`
 
 4. Build/Test Command  
@@ -34,9 +34,10 @@ Ship the first usable Quoteable Quotes `.saver` release:
 - `swift build -c release`
 - `swift test`
 - `scripts/build-saver.sh`
+- `ditto -c -k --keepParent dist/QuoteableQuotes.saver dist/QuoteableQuotes-v1.0.1.saver.zip`
 
 5. Success Definition  
-`swift build -c release`, `swift test`, and `scripts/build-saver.sh` succeed without error.
+`swift build -c release`, `swift test`, `scripts/build-saver.sh`, release zip creation, commit, push, and GitHub release publication succeed without error.
 
 ## Completed Work
 - Bootstrapped Swift package project (`ScreenSaver` executable target).  
@@ -214,6 +215,33 @@ Ship the first usable Quoteable Quotes `.saver` release:
   - Updated `README.md`, `sketch.md`, and `handoff.md` for current baseline and release-first workflows.
 - Code documentation pass:
   - Added Doxygen-style API comments across key Swift source files.
+- Kevin Samuels quote library added:
+  - Added `kevin-samuels-quotes.xml` as a 200-entry bundled XML pack.
+  - Registered the pack in both standalone and `.saver` bundled theme lists.
+  - Entries are paraphrased thematic aphorisms attributed as `Kevin Samuels (paraphrased)` and marked as not verified verbatim in `attribution`.
+  - Added test coverage for count, uniqueness, theme key, author labeling, attribution note, and standalone registration.
+- Kevin Samuels saver runtime fix:
+  - Removed a stray non-paraphrased entry so `kevin-samuels-quotes.xml` is exactly 200 parsed entries.
+  - Updated `.saver` XML parsing to consume `<theme>` metadata for schema parity with the standalone parser.
+  - Added `.saver` bundled quote filename normalization so saved theme keys such as `kevin-samuels` resolve to `kevin-samuels-quotes.xml`.
+  - Added tolerance for a persisted misspelling, `kevin-samauels-quotes.xml`, and persistently rewrites it to `kevin-samuels-quotes.xml`.
+  - Cleared stale quote arrays before `.saver` reloads so failed loads cannot keep an old deck.
+  - Rebuilt and installed `~/Library/Screen Savers/QuoteableQuotes.saver`, then terminated stale `legacyScreenSaver` / System Settings preview processes so macOS reloads the installed bundle.
+- Proposed font toggle added:
+  - Added persisted `Use proposed font?` setting to standalone and `.saver` options.
+  - When enabled, XML `<font>` suggestions override the selected font; when disabled, the selected font is authoritative.
+  - Updated font resolution to accept both font names and family names before falling back to the system font.
+  - Updated the shared XIB and compiled nib so the checkbox appears in the Appearance group.
+- Proposed font switch UI cleanup:
+  - Replaced the checkbox-style proposed-font control surface with a left-justified `Use Proposed Font?` label, grey proposed font-name label, and an `NSSwitch`.
+  - Applied the switch row to the standalone options dialog, shared XIB-backed saver options sheet, and hand-built saver fallback sheet.
+  - Proposed font label now refreshes when bundled theme, custom XML, or bundled-source selection changes.
+  - Rebuilt and installed `~/Library/Screen Savers/QuoteableQuotes.saver`, then terminated the stale `legacyScreenSaver` preview process so macOS reloads the updated bundle.
+- Release v1.0.1 prep:
+  - Bumped `.saver` `CFBundleShortVersionString` to `1.0.1`.
+  - Added `docs/releases/v1.0.1.md` with Kevin Samuels, saver-loading, and proposed-font switch changes.
+  - Updated install documentation and README release-note pointer for v1.0.1.
+  - Built `dist/QuoteableQuotes.saver` and generated `dist/QuoteableQuotes-v1.0.1.saver.zip`.
 - Milestone 6 complete: resources cleanup + `.saver` packaging
   - Updated bundled background references to `Resources/images/*` paths.
   - Updated bundled image loading logic to resolve subdirectory assets correctly.
@@ -244,6 +272,7 @@ Ship the first usable Quoteable Quotes `.saver` release:
 - Last successful build command: `swift build -c release`
 - Last successful test command: `swift test`
 - Last successful saver build command: `scripts/build-saver.sh`
+- Last successful release zip command: `ditto -c -k --keepParent dist/QuoteableQuotes.saver dist/QuoteableQuotes-v1.0.1.saver.zip`
 
 ## Outstanding Blockers
 - No code blockers for current baseline.

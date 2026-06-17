@@ -26,6 +26,7 @@ final class AppSettings {
         static let customBackgroundFilePath = "style.customBackgroundFilePath"
         static let foregroundColorData = "style.foregroundColorData"
         static let fontSize = "style.fontSize"
+        static let useProposedFont = "style.useProposedFont"
         static let baseQuoteSeconds = "style.baseQuoteSeconds"
         static let animationStyle = "style.animationStyle"
         static let showsAttribution = "style.showsAttribution"
@@ -43,6 +44,7 @@ final class AppSettings {
         BundledTheme(title: "Mixed (Default)", fileName: "quotes.xml"),
         BundledTheme(title: "Generic", fileName: "generic-quotes.xml"),
         BundledTheme(title: "Leadership", fileName: "leadership-quotes.xml"),
+        BundledTheme(title: "Kevin Samuels", fileName: "kevin-samuels-quotes.xml"),
         BundledTheme(title: "Stoicism", fileName: "stoicism-quotes.xml"),
         BundledTheme(title: "Comedic", fileName: "comedic-quotes.xml"),
         BundledTheme(title: "Greek Philosophers", fileName: "greek-philosophers-quotes.xml"),
@@ -103,6 +105,7 @@ final class AppSettings {
     private(set) var customBackgroundFilePath: String?
     private(set) var foregroundColor: NSColor
     private(set) var fontSize: CGFloat
+    private(set) var useProposedFont: Bool
     private(set) var baseQuoteSeconds: TimeInterval
     private(set) var animationStyle: AnimationStyle
     private(set) var showsAttribution: Bool
@@ -141,6 +144,7 @@ final class AppSettings {
 
         let storedSize = defaults.double(forKey: Keys.fontSize)
         fontSize = storedSize > 0 ? CGFloat(storedSize) : 48
+        useProposedFont = defaults.object(forKey: Keys.useProposedFont) as? Bool ?? true
         let storedBaseSeconds = defaults.double(forKey: Keys.baseQuoteSeconds)
         baseQuoteSeconds = storedBaseSeconds > 0 ? storedBaseSeconds : 5.0
         let storedAnimation = defaults.string(forKey: Keys.animationStyle) ?? AnimationStyle.fade.rawValue
@@ -225,6 +229,15 @@ final class AppSettings {
         guard clamped != fontSize else { return }
         fontSize = clamped
         defaults.set(Double(clamped), forKey: Keys.fontSize)
+        NotificationCenter.default.post(name: .styleSettingsDidChange, object: nil)
+    }
+
+    /// Updates whether quote XML font suggestions override the selected font.
+    /// - Parameter enabled: `true` to prefer XML `<font>` values when present.
+    func updateUseProposedFont(_ enabled: Bool) {
+        guard enabled != useProposedFont else { return }
+        useProposedFont = enabled
+        defaults.set(enabled, forKey: Keys.useProposedFont)
         NotificationCenter.default.post(name: .styleSettingsDidChange, object: nil)
     }
 

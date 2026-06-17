@@ -27,6 +27,7 @@ final class DisplayOptionsViewController: NSViewController {
     @IBOutlet private weak var xibFontColorWell: NSColorWell?
     @IBOutlet private weak var xibFontSizeSlider: NSSlider?
     @IBOutlet private weak var xibFontSizeValueLabel: NSTextField?
+    @IBOutlet private weak var xibUseProposedFontCheckbox: NSButton?
     @IBOutlet private weak var xibBackgroundModePicker: NSPopUpButton?
     @IBOutlet private weak var xibBundledBackgroundPicker: NSPopUpButton?
     @IBOutlet private weak var xibCustomBackgroundPathLabel: NSTextField?
@@ -48,6 +49,7 @@ final class DisplayOptionsViewController: NSViewController {
     private var activeFontColorWell: NSColorWell { xibFontColorWell ?? foregroundWell }
     private var activeFontSizeSlider: NSSlider { xibFontSizeSlider ?? fontSizeSlider }
     private var activeFontSizeValueLabel: NSTextField { xibFontSizeValueLabel ?? fontSizeValueLabel }
+    private var activeUseProposedFontSwitch: NSSwitch { useProposedFontSwitch }
     private var activeBackgroundModePicker: NSPopUpButton { xibBackgroundModePicker ?? backgroundModePicker }
     private var activeBundledBackgroundPicker: NSPopUpButton { xibBundledBackgroundPicker ?? bundledBackgroundPicker }
     private var activeCustomBackgroundPathLabel: NSTextField { xibCustomBackgroundPathLabel ?? customBackgroundPathLabel }
@@ -84,6 +86,29 @@ final class DisplayOptionsViewController: NSViewController {
         let picker = NSPopUpButton()
         picker.translatesAutoresizingMaskIntoConstraints = false
         return picker
+    }()
+
+    private let useProposedFontLabel: NSTextField = {
+        let label = NSTextField(labelWithString: "Use Proposed Font?")
+        label.font = .systemFont(ofSize: 13, weight: .semibold)
+        label.alignment = .left
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+
+    private let proposedFontNameLabel: NSTextField = {
+        let label = NSTextField(labelWithString: "No proposed font")
+        label.font = .systemFont(ofSize: 12)
+        label.textColor = .secondaryLabelColor
+        label.lineBreakMode = .byTruncatingTail
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+
+    private let useProposedFontSwitch: NSSwitch = {
+        let control = NSSwitch()
+        control.translatesAutoresizingMaskIntoConstraints = false
+        return control
     }()
 
     private let colorLabel: NSTextField = {
@@ -284,6 +309,7 @@ final class DisplayOptionsViewController: NSViewController {
     /// Configures controls and layout constraints.
     override func viewDidLoad() {
         super.viewDidLoad()
+        installProposedFontControlSurfaceIfNeeded()
         configureControls()
         if !usesXIBLayout {
             configureLayout()
@@ -307,6 +333,7 @@ final class DisplayOptionsViewController: NSViewController {
         let fontColorWell = activeFontColorWell
         let fontSizeSlider = activeFontSizeSlider
         let fontSizeValueLabel = activeFontSizeValueLabel
+        let useProposedFontSwitch = activeUseProposedFontSwitch
         let animationStylePicker = activeAnimationStylePicker
         let baseTimeSlider = activeBaseTimeSlider
         let baseTimeValueLabel = activeBaseTimeValueLabel
@@ -347,6 +374,7 @@ final class DisplayOptionsViewController: NSViewController {
         fontColorWell.color = AppSettings.shared.foregroundColor
         fontSizeSlider.doubleValue = Double(AppSettings.shared.fontSize)
         fontSizeValueLabel.stringValue = "\(Int(AppSettings.shared.fontSize))"
+        useProposedFontSwitch.state = AppSettings.shared.useProposedFont ? .on : .off
         animationStylePicker.removeAllItems()
         animationStylePicker.addItems(withTitles: AppSettings.AnimationStyle.allCases.map(\.title))
         if let styleIndex = AppSettings.AnimationStyle.allCases.firstIndex(of: AppSettings.shared.animationStyle) {
@@ -370,6 +398,8 @@ final class DisplayOptionsViewController: NSViewController {
         fontColorWell.action = #selector(foregroundDidChange(_:))
         fontSizeSlider.target = self
         fontSizeSlider.action = #selector(fontSizeDidChange(_:))
+        useProposedFontSwitch.target = self
+        useProposedFontSwitch.action = #selector(useProposedFontDidChange(_:))
         animationStylePicker.target = self
         animationStylePicker.action = #selector(animationStyleDidChange(_:))
         baseTimeSlider.target = self
@@ -392,6 +422,43 @@ final class DisplayOptionsViewController: NSViewController {
         clearBackgroundButton.action = #selector(clearCustomBackground(_:))
         refreshBackgroundPathLabel()
         refreshBackgroundControlState()
+        refreshProposedFontNameLabel()
+    }
+
+    /// Replaces the XIB checkbox-shaped button with a label, font name, and switch.
+    private func installProposedFontControlSurfaceIfNeeded() {
+        guard usesXIBLayout, let anchor = xibUseProposedFontCheckbox else { return }
+        anchor.isHidden = true
+        anchor.isEnabled = false
+
+        let switchWidth: CGFloat = 52
+        let rowHeight: CGFloat = 24
+        let leftX: CGFloat = 38
+        let switchX = view.bounds.width - switchWidth - 42
+        let rowY = anchor.frame.midY - (rowHeight / 2)
+
+        useProposedFontLabel.translatesAutoresizingMaskIntoConstraints = true
+        proposedFontNameLabel.translatesAutoresizingMaskIntoConstraints = true
+        useProposedFontSwitch.translatesAutoresizingMaskIntoConstraints = true
+
+        useProposedFontLabel.frame = NSRect(x: leftX, y: rowY + 2, width: 126, height: 20)
+        proposedFontNameLabel.frame = NSRect(
+            x: useProposedFontLabel.frame.maxX + 8,
+            y: rowY + 2,
+            width: max(80, switchX - useProposedFontLabel.frame.maxX - 18),
+            height: 20
+        )
+        useProposedFontSwitch.frame = NSRect(x: switchX, y: rowY, width: switchWidth, height: rowHeight)
+
+        if useProposedFontLabel.superview == nil {
+            view.addSubview(useProposedFontLabel)
+        }
+        if proposedFontNameLabel.superview == nil {
+            view.addSubview(proposedFontNameLabel)
+        }
+        if useProposedFontSwitch.superview == nil {
+            view.addSubview(useProposedFontSwitch)
+        }
     }
 
     /// Applies live font-face preview to font picker rows.
@@ -423,6 +490,7 @@ final class DisplayOptionsViewController: NSViewController {
 
         let appearanceStack = makeStack(orientation: .vertical, spacing: 12)
         appearanceStack.addArrangedSubview(makeFieldStack(label: fontLabel, control: fontPicker))
+        appearanceStack.addArrangedSubview(makeProposedFontRow())
         appearanceStack.addArrangedSubview(makeSliderFieldStack(label: fontSizeLabel, slider: fontSizeSlider, valueLabel: fontSizeValueLabel))
         appearanceStack.addArrangedSubview(
             makeStack(
@@ -532,6 +600,23 @@ final class DisplayOptionsViewController: NSViewController {
         return makeStack(orientation: .vertical, spacing: 8, views: [label, row])
     }
 
+    /// Builds the proposed-font row used by the programmatic fallback layout.
+    private func makeProposedFontRow() -> NSStackView {
+        let spacer = NSView()
+        spacer.translatesAutoresizingMaskIntoConstraints = false
+        proposedFontNameLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        proposedFontNameLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
+
+        let row = makeStack(
+            orientation: .horizontal,
+            spacing: 8,
+            views: [useProposedFontLabel, proposedFontNameLabel, spacer, useProposedFontSwitch]
+        )
+        row.alignment = .centerY
+        return row
+    }
+
     /// Builds a configured stack view with optional arranged subviews.
     private func makeStack(orientation: NSUserInterfaceLayoutOrientation, spacing: CGFloat, views: [NSView] = []) -> NSStackView {
         let stack = NSStackView(views: views)
@@ -622,6 +707,11 @@ final class DisplayOptionsViewController: NSViewController {
         AppSettings.shared.updateFontSize(rounded)
     }
 
+    /// Proposed XML font toggle handler.
+    @objc private func useProposedFontDidChange(_ sender: NSControl) {
+        AppSettings.shared.updateUseProposedFont(sender.integerValue == NSControl.StateValue.on.rawValue)
+    }
+
     /// Animation style picker handler.
     @objc private func animationStyleDidChange(_ sender: NSPopUpButton) {
         let index = sender.indexOfSelectedItem
@@ -656,6 +746,7 @@ final class DisplayOptionsViewController: NSViewController {
         if panel.runModal() == .OK, let url = panel.url {
             AppSettings.shared.updateCustomQuoteFilePath(url.path)
             refreshQuoteFilePathLabel()
+            refreshProposedFontNameLabel()
         }
     }
 
@@ -663,6 +754,7 @@ final class DisplayOptionsViewController: NSViewController {
     @objc private func useBundledQuotes(_ sender: NSButton) {
         AppSettings.shared.updateCustomQuoteFilePath(nil)
         refreshQuoteFilePathLabel()
+        refreshProposedFontNameLabel()
     }
 
     /// Theme picker handler for bundled quote libraries.
@@ -675,6 +767,7 @@ final class DisplayOptionsViewController: NSViewController {
             AppSettings.shared.updateCustomQuoteFilePath(nil)
         }
         refreshQuoteFilePathLabel()
+        refreshProposedFontNameLabel()
     }
 
     /// Refreshes quote source path label based on custom/bundled selection.
@@ -685,6 +778,26 @@ final class DisplayOptionsViewController: NSViewController {
             let file = AppSettings.shared.bundledQuoteFileName
             activeQuoteFilePathLabel.stringValue = "Using bundled \(file)"
         }
+    }
+
+    /// Refreshes the grey proposed font label from the currently selected quote source.
+    private func refreshProposedFontNameLabel() {
+        proposedFontNameLabel.stringValue = currentProposedFontName()
+    }
+
+    /// Returns the first non-empty XML font suggestion for the active source.
+    private func currentProposedFontName() -> String {
+        let quotes: [Quote]
+        if let path = AppSettings.shared.customQuoteFilePath, !path.isEmpty {
+            quotes = (try? QuoteRepository.loadQuotes(from: URL(fileURLWithPath: path))) ?? []
+        } else {
+            quotes = (try? QuoteRepository.loadBundledQuotes(named: AppSettings.shared.bundledQuoteFileName)) ?? []
+        }
+
+        return quotes
+            .compactMap { $0.font?.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .first(where: { !$0.isEmpty })
+            ?? "No proposed font"
     }
 
     /// Refreshes custom background path label.
