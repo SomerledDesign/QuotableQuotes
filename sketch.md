@@ -86,15 +86,6 @@ Status: Complete
  **Screensaver** implementation.  
     - make the standalone swift app a full fledged screensaver bundle
 
-## Milestone 7
-Status: Planned / Active
- - Re-introduce hotkeys with stable behavior in both app and `.saver` runtime:
-   1. Arrow keys and space pause quote stream.
-   2. Right Arrow advances to next quote while paused.
-   3. Left Arrow returns to previous quote while paused.
-   4. Space resumes playback.
-
 ## Current Baseline Notes
 - Background picture functionality (bundled + custom) is implemented and repaired in both standalone and `.saver` targets.
 - Font face/color/size, animation styles, attribution toggle, and XML theme/source selection are all active.
-- Hotkeys are intentionally disabled pending Milestone 7 stabilization.

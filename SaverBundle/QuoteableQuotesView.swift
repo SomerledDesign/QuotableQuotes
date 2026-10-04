@@ -8,10 +8,17 @@ import UniformTypeIdentifiers
 private struct SaverQuote {
     let body: String
     let author: String
+    let font: String?
     let attribution: String?
 
     var wordCount: Int {
         body.split { !$0.isLetter && !$0.isNumber }.count
+    }
+
+    func preferredFontName(fallback: String, useProposedFont: Bool = true) -> String {
+        guard useProposedFont else { return fallback }
+        let suggested = font?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return suggested.isEmpty ? fallback : suggested
     }
 }
 
@@ -25,6 +32,7 @@ private final class SaverQuoteParser: NSObject, XMLParserDelegate {
 
     private var buildingBody: String?
     private var buildingAuthor: String?
+    private var buildingFont: String?
     private var buildingAttribution: String?
     private var insideQuote = false
     private var pendingBody: String?
@@ -54,13 +62,14 @@ private final class SaverQuoteParser: NSObject, XMLParserDelegate {
             insideQuote = true
             buildingBody = nil
             buildingAuthor = nil
+            buildingFont = nil
             buildingAttribution = nil
             currentElement = key
             currentText = ""
             return
         }
 
-        if key == "author" || key == "body" || key == "attribution" {
+        if key == "author" || key == "body" || key == "theme" || key == "font" || key == "attribution" {
             currentElement = key
             currentText = ""
         }
@@ -84,11 +93,16 @@ private final class SaverQuoteParser: NSObject, XMLParserDelegate {
 
         if key == "body" {
             if !text.isEmpty { buildingBody = text }
+        } else if key == "theme" {
+            // Accepted for schema parity with the standalone app; the saver does
+            // not render theme metadata directly.
+        } else if key == "font" {
+            if !text.isEmpty { buildingFont = text }
         } else if key == "attribution" {
             if !text.isEmpty { buildingAttribution = text }
         } else if key == "quote" {
             if let body = buildingBody, !body.isEmpty, let author = buildingAuthor, !author.isEmpty {
-                quotes.append(SaverQuote(body: body, author: author, attribution: buildingAttribution))
+                quotes.append(SaverQuote(body: body, author: author, font: buildingFont, attribution: buildingAttribution))
             } else if !text.isEmpty {
                 pendingBody = text
             }
@@ -96,11 +110,11 @@ private final class SaverQuoteParser: NSObject, XMLParserDelegate {
         } else if key == "author", insideQuote {
             if !text.isEmpty { buildingAuthor = text }
         } else if key == "author", let body = pendingBody, !body.isEmpty, !text.isEmpty {
-            quotes.append(SaverQuote(body: body, author: text, attribution: nil))
+            quotes.append(SaverQuote(body: body, author: text, font: nil, attribution: nil))
             pendingBody = nil
         }
 
-        if key == "quote" || key == "author" || key == "body" || key == "attribution" {
+        if key == "quote" || key == "author" || key == "body" || key == "theme" || key == "font" || key == "attribution" {
             currentElement = nil
             currentText = ""
         }
@@ -118,6 +132,7 @@ final class QuoteableQuotesView: ScreenSaverView {
         static let fontSize = "fontSize"
         static let animationStyle = "animationStyle"
         static let foregroundColorData = "foregroundColorData"
+        static let useProposedFont = "useProposedFont"
         static let backgroundMode = "backgroundMode"
         static let backgroundColorData = "backgroundColorData"
         static let bundledBackgroundFileName = "bundledBackgroundFileName"
@@ -179,12 +194,49 @@ final class QuoteableQuotesView: ScreenSaverView {
 
     private static let bundledThemes: [BundledTheme] = [
         BundledTheme(title: "Mixed (Default)", fileName: "quotes.xml"),
+        BundledTheme(title: "Generic", fileName: "generic-quotes.xml"),
         BundledTheme(title: "Leadership", fileName: "leadership-quotes.xml"),
+        BundledTheme(title: "Kevin Samuels", fileName: "kevin-samuels-quotes.xml"),
         BundledTheme(title: "Stoicism", fileName: "stoicism-quotes.xml"),
         BundledTheme(title: "Comedic", fileName: "comedic-quotes.xml"),
         BundledTheme(title: "Greek Philosophers", fileName: "greek-philosophers-quotes.xml"),
         BundledTheme(title: "French Revolutionaries", fileName: "french-revolutionaries-quotes.xml")
     ]
+
+    /// Normalizes persisted bundled quote identifiers into real XML filenames.
+    ///
+    /// Older or hand-edited defaults may contain a title or theme key instead of
+    /// the file name. Accept those aliases so resource lookup does not fall back
+    /// to "No quotes configured."
+    private static func normalizedBundledQuoteFileName(_ storedValue: String?) -> String {
+        let raw = storedValue?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        guard !raw.isEmpty else { return "quotes.xml" }
+
+        if let exact = bundledThemes.first(where: { $0.fileName == raw }) {
+            return exact.fileName
+        }
+
+        let normalized = raw
+            .lowercased()
+            .replacingOccurrences(of: " ", with: "-")
+            .replacingOccurrences(of: "_", with: "-")
+            .replacingOccurrences(of: "samauels", with: "samuels")
+
+        if let match = bundledThemes.first(where: { theme in
+            let titleKey = theme.title
+                .lowercased()
+                .replacingOccurrences(of: " ", with: "-")
+                .replacingOccurrences(of: "_", with: "-")
+                .replacingOccurrences(of: "-(default)", with: "")
+            let fileKey = URL(fileURLWithPath: theme.fileName).deletingPathExtension().lastPathComponent
+            let shortFileKey = fileKey.replacingOccurrences(of: "-quotes", with: "")
+            return titleKey == normalized || fileKey == normalized || shortFileKey == normalized
+        }) {
+            return match.fileName
+        }
+
+        return raw.hasSuffix(".xml") ? raw : "\(normalized).xml"
+    }
 
     private let saverDefaults = ScreenSaverDefaults(forModuleWithName: "com.kmurphy.QuoteableQuotes")
 
@@ -211,6 +263,10 @@ final class QuoteableQuotesView: ScreenSaverView {
     private var foregroundWell: NSColorWell?
     private var fontSizeSlider: NSSlider?
     private var fontSizeValueLabel: NSTextField?
+    private var useProposedFontCheckbox: NSButton?
+    private var useProposedFontLabel: NSTextField?
+    private var proposedFontNameLabel: NSTextField?
+    private var useProposedFontSwitch: NSSwitch?
     private var backgroundModePicker: NSPopUpButton?
     private var backgroundColorWell: NSColorWell?
     private var bundledBackgroundPicker: NSPopUpButton?
@@ -220,6 +276,25 @@ final class QuoteableQuotesView: ScreenSaverView {
     private var baseTimeSlider: NSSlider?
     private var baseTimeValueLabel: NSTextField?
     private var showAttributionCheckbox: NSButton?
+    @IBOutlet private weak var xibFontPicker: NSPopUpButton?
+    @IBOutlet private weak var xibBackgroundColorWell: NSColorWell?
+    @IBOutlet private weak var xibFontColorWell: NSColorWell?
+    @IBOutlet private weak var xibFontSizeSlider: NSSlider?
+    @IBOutlet private weak var xibFontSizeValueLabel: NSTextField?
+    @IBOutlet private weak var xibUseProposedFontCheckbox: NSButton?
+    @IBOutlet private weak var xibBackgroundModePicker: NSPopUpButton?
+    @IBOutlet private weak var xibBundledBackgroundPicker: NSPopUpButton?
+    @IBOutlet private weak var xibCustomBackgroundPathLabel: NSTextField?
+    @IBOutlet private weak var xibChooseBackgroundButton: NSButton?
+    @IBOutlet private weak var xibClearBackgroundButton: NSButton?
+    @IBOutlet private weak var xibQuoteThemePicker: NSPopUpButton?
+    @IBOutlet private weak var xibQuoteFilePathLabel: NSTextField?
+    @IBOutlet private weak var xibChooseXMLButton: NSButton?
+    @IBOutlet private weak var xibUseBundledButton: NSButton?
+    @IBOutlet private weak var xibAnimationStylePicker: NSPopUpButton?
+    @IBOutlet private weak var xibBaseTimeSlider: NSSlider?
+    @IBOutlet private weak var xibBaseTimeValueLabel: NSTextField?
+    @IBOutlet private weak var xibShowAttributionCheckbox: NSButton?
 
     /// Creates saver view for runtime/preview host.
     override init?(frame: NSRect, isPreview: Bool) {
@@ -241,11 +316,6 @@ final class QuoteableQuotesView: ScreenSaverView {
         scheduleNext()
     }
 
-    /// The view can accept first-responder status for host event routing.
-    override var acceptsFirstResponder: Bool { true }
-    /// Requests first-responder status.
-    override func becomeFirstResponder() -> Bool { true }
-
     /// Indicates options sheet support.
     override var hasConfigureSheet: Bool { true }
 
@@ -261,7 +331,6 @@ final class QuoteableQuotesView: ScreenSaverView {
     /// ScreenSaverView animation lifecycle start.
     override func startAnimation() {
         super.startAnimation()
-        window?.makeFirstResponder(self)
         scheduleNext()
     }
 
@@ -284,6 +353,7 @@ final class QuoteableQuotesView: ScreenSaverView {
         saverDefaults?.register(defaults: [
             Keys.fontName: "Papyrus",
             Keys.fontSize: 48.0,
+            Keys.useProposedFont: true,
             Keys.animationStyle: AnimationStyle.randomTransition.rawValue,
             Keys.baseSeconds: 5.0,
             Keys.showsAttribution: true,
@@ -351,8 +421,13 @@ final class QuoteableQuotesView: ScreenSaverView {
 
     /// Loads quotes from custom XML, bundled XML, then fallback quote.
     private func loadQuotes() {
+        quotes = []
         let customPath = saverDefaults?.string(forKey: Keys.customQuoteFilePath)
-        let bundledFile = saverDefaults?.string(forKey: Keys.bundledQuoteFileName) ?? "quotes.xml"
+        let bundledFile = Self.normalizedBundledQuoteFileName(saverDefaults?.string(forKey: Keys.bundledQuoteFileName))
+        if saverDefaults?.string(forKey: Keys.bundledQuoteFileName) != bundledFile {
+            saverDefaults?.set(bundledFile, forKey: Keys.bundledQuoteFileName)
+            saverDefaults?.synchronize()
+        }
 
         if let customURL = resolvedCustomQuoteURL(customPath: customPath) {
             if let data = try? Data(contentsOf: customURL) {
@@ -369,7 +444,7 @@ final class QuoteableQuotesView: ScreenSaverView {
         }
 
         if quotes.isEmpty {
-            quotes = [SaverQuote(body: "No quotes configured.", author: "Quoteable Quotes", attribution: nil)]
+            quotes = [SaverQuote(body: "No quotes configured.", author: "Quoteable Quotes", font: nil, attribution: nil)]
         }
 
         drawOrder = Array(quotes.indices).shuffled()
@@ -382,6 +457,7 @@ final class QuoteableQuotesView: ScreenSaverView {
             drawOrder = Array(quotes.indices).shuffled()
             drawIndex = 0
         }
+
         let quote = quotes[drawOrder[drawIndex]]
         drawIndex += 1
         return quote
@@ -401,13 +477,21 @@ final class QuoteableQuotesView: ScreenSaverView {
     private func transitionToQuote(_ quote: SaverQuote, animated: Bool) {
         currentQuote = quote
 
-        let fontName = saverDefaults?.string(forKey: Keys.fontName) ?? "Papyrus"
+        let configuredFontName = saverDefaults?.string(forKey: Keys.fontName) ?? "Papyrus"
         let quoteSize = CGFloat(saverDefaults?.double(forKey: Keys.fontSize) ?? 48)
         let textColor = configuredForegroundColor()
+        let useProposedFont = saverDefaults?.bool(forKey: Keys.useProposedFont) ?? true
+        let resolvedFontName = quote.preferredFontName(fallback: configuredFontName, useProposedFont: useProposedFont)
 
-        let quoteFont = NSFont(name: fontName, size: quoteSize) ?? NSFont.systemFont(ofSize: quoteSize, weight: .medium)
+        let quoteFont =
+            NSFont(name: resolvedFontName, size: quoteSize)
+            ?? NSFontManager.shared.font(withFamily: resolvedFontName, traits: [], weight: 5, size: quoteSize)
+            ?? NSFont.systemFont(ofSize: quoteSize, weight: .medium)
         let authorSize = max(14, round(quoteSize * 0.58))
-        let authorFont = NSFont(name: fontName, size: authorSize) ?? NSFont.systemFont(ofSize: authorSize, weight: .regular)
+        let authorFont =
+            NSFont(name: resolvedFontName, size: authorSize)
+            ?? NSFontManager.shared.font(withFamily: resolvedFontName, traits: [], weight: 5, size: authorSize)
+            ?? NSFont.systemFont(ofSize: authorSize, weight: .regular)
         let attributionFont = NSFont(name: "Arial Narrow", size: max(12, round(quoteSize * 0.34)))
             ?? NSFont(name: "Tahoma", size: max(12, round(quoteSize * 0.34)))
             ?? NSFont.systemFont(ofSize: max(12, round(quoteSize * 0.34)), weight: .regular)
@@ -574,8 +658,89 @@ final class QuoteableQuotesView: ScreenSaverView {
         return nil
     }
 
+    /// Loads the shared XIB-backed options view and maps its controls onto the
+    /// saver's existing configuration properties.
+    private func loadConfigureContentView() -> NSView? {
+        let bundle = Bundle(for: type(of: self))
+        guard let nib = NSNib(nibNamed: "DisplayOptionsView", bundle: bundle) else {
+            return nil
+        }
+        var topLevelObjects: NSArray?
+        guard nib.instantiate(withOwner: self, topLevelObjects: &topLevelObjects) else {
+            return nil
+        }
+        guard let contentView = (topLevelObjects as? [Any])?.first(where: { $0 is NSView }) as? NSView else {
+            return nil
+        }
+
+        fontPicker = xibFontPicker
+        animationStylePicker = xibAnimationStylePicker
+        foregroundWell = xibFontColorWell
+        fontSizeSlider = xibFontSizeSlider
+        fontSizeValueLabel = xibFontSizeValueLabel
+        useProposedFontCheckbox = xibUseProposedFontCheckbox
+        installProposedFontControlsIfNeeded(in: contentView)
+        backgroundModePicker = xibBackgroundModePicker
+        backgroundColorWell = xibBackgroundColorWell
+        bundledBackgroundPicker = xibBundledBackgroundPicker
+        customBackgroundPathLabel = xibCustomBackgroundPathLabel
+        quoteThemePicker = xibQuoteThemePicker
+        quotePathLabel = xibQuoteFilePathLabel
+        baseTimeSlider = xibBaseTimeSlider
+        baseTimeValueLabel = xibBaseTimeValueLabel
+        showAttributionCheckbox = xibShowAttributionCheckbox
+
+        return contentView
+    }
+
+    /// Replaces the XIB checkbox-shaped button with a left label, font name, and switch.
+    private func installProposedFontControlsIfNeeded(in contentView: NSView) {
+        guard let anchor = xibUseProposedFontCheckbox else { return }
+        anchor.isHidden = true
+        anchor.isEnabled = false
+
+        let label = NSTextField(labelWithString: "Use Proposed Font?")
+        label.font = .systemFont(ofSize: 13, weight: .semibold)
+        label.alignment = .left
+        label.frame = NSRect(x: 38, y: anchor.frame.midY - 8, width: 126, height: 20)
+        label.autoresizingMask = [.maxXMargin, .minYMargin]
+
+        let switchWidth: CGFloat = 52
+        let switchX = contentView.bounds.width - switchWidth - 42
+
+        let fontNameLabel = NSTextField(labelWithString: "No proposed font")
+        fontNameLabel.font = .systemFont(ofSize: 12)
+        fontNameLabel.textColor = .secondaryLabelColor
+        fontNameLabel.lineBreakMode = .byTruncatingTail
+        fontNameLabel.frame = NSRect(
+            x: label.frame.maxX + 8,
+            y: anchor.frame.midY - 8,
+            width: max(80, switchX - label.frame.maxX - 18),
+            height: 20
+        )
+        fontNameLabel.autoresizingMask = [.width, .minYMargin]
+
+        let proposedSwitch = NSSwitch(frame: NSRect(x: switchX, y: anchor.frame.midY - 12, width: switchWidth, height: 24))
+        proposedSwitch.target = self
+        proposedSwitch.action = #selector(useProposedFontChanged(_:))
+        proposedSwitch.autoresizingMask = [.minXMargin, .minYMargin]
+
+        self.useProposedFontLabel = label
+        self.proposedFontNameLabel = fontNameLabel
+        self.useProposedFontSwitch = proposedSwitch
+
+        contentView.addSubview(label)
+        contentView.addSubview(fontNameLabel)
+        contentView.addSubview(proposedSwitch)
+    }
+
     /// Creates the detached/options configuration window.
     private func makeConfigureWindow() -> NSWindow {
+        if let window = makeConfigureWindowFromNib() {
+            refreshConfigControls()
+            return window
+        }
+
         let window = NSPanel(
             contentRect: NSRect(x: 0, y: 0, width: 500, height: 810),
             styleMask: [.titled],
@@ -603,6 +768,30 @@ final class QuoteableQuotesView: ScreenSaverView {
         applyFontPreview(to: fontPicker)
         self.fontPicker = fontPicker
         root.addSubview(fontPicker)
+
+        let useProposedFontLabel = NSTextField(
+            labelWithString: "Use Proposed Font?"
+        )
+        useProposedFontLabel.font = .systemFont(ofSize: 13, weight: .semibold)
+        useProposedFontLabel.alignment = .left
+        useProposedFontLabel.translatesAutoresizingMaskIntoConstraints = false
+        self.useProposedFontLabel = useProposedFontLabel
+        root.addSubview(useProposedFontLabel)
+
+        let proposedFontNameLabel = NSTextField(labelWithString: "No proposed font")
+        proposedFontNameLabel.font = .systemFont(ofSize: 12)
+        proposedFontNameLabel.textColor = .secondaryLabelColor
+        proposedFontNameLabel.lineBreakMode = .byTruncatingTail
+        proposedFontNameLabel.translatesAutoresizingMaskIntoConstraints = false
+        self.proposedFontNameLabel = proposedFontNameLabel
+        root.addSubview(proposedFontNameLabel)
+
+        let useProposedFontSwitch = NSSwitch()
+        useProposedFontSwitch.target = self
+        useProposedFontSwitch.action = #selector(useProposedFontChanged(_:))
+        useProposedFontSwitch.translatesAutoresizingMaskIntoConstraints = false
+        self.useProposedFontSwitch = useProposedFontSwitch
+        root.addSubview(useProposedFontSwitch)
 
         let bgModeLabel = NSTextField(labelWithString: "Background Mode")
         bgModeLabel.font = .systemFont(ofSize: 13, weight: .semibold)
@@ -775,8 +964,19 @@ final class QuoteableQuotesView: ScreenSaverView {
             fontPicker.topAnchor.constraint(equalTo: fontLabel.bottomAnchor, constant: 8),
             fontPicker.trailingAnchor.constraint(equalTo: root.trailingAnchor, constant: -20),
 
+            useProposedFontLabel.leadingAnchor.constraint(equalTo: fontPicker.leadingAnchor),
+            useProposedFontLabel.topAnchor.constraint(equalTo: fontPicker.bottomAnchor, constant: 10),
+            useProposedFontLabel.widthAnchor.constraint(equalToConstant: 126),
+
+            proposedFontNameLabel.leadingAnchor.constraint(equalTo: useProposedFontLabel.trailingAnchor, constant: 8),
+            proposedFontNameLabel.centerYAnchor.constraint(equalTo: useProposedFontLabel.centerYAnchor),
+            proposedFontNameLabel.trailingAnchor.constraint(lessThanOrEqualTo: useProposedFontSwitch.leadingAnchor, constant: -12),
+
+            useProposedFontSwitch.trailingAnchor.constraint(equalTo: root.trailingAnchor, constant: -20),
+            useProposedFontSwitch.centerYAnchor.constraint(equalTo: useProposedFontLabel.centerYAnchor),
+
             bgModeLabel.leadingAnchor.constraint(equalTo: fontLabel.leadingAnchor),
-            bgModeLabel.topAnchor.constraint(equalTo: fontPicker.bottomAnchor, constant: 16),
+            bgModeLabel.topAnchor.constraint(equalTo: useProposedFontLabel.bottomAnchor, constant: 16),
 
             bgModePicker.leadingAnchor.constraint(equalTo: bgModeLabel.leadingAnchor),
             bgModePicker.topAnchor.constraint(equalTo: bgModeLabel.bottomAnchor, constant: 8),
@@ -875,13 +1075,56 @@ final class QuoteableQuotesView: ScreenSaverView {
         return window
     }
 
+    /// Creates the options/configuration window from the shared display options nib.
+    private func makeConfigureWindowFromNib() -> NSWindow? {
+        guard let contentView = loadConfigureContentView() else { return nil }
+
+        let contentSize = contentView.frame.size
+        let footerHeight: CGFloat = 52
+        let window = NSPanel(
+            contentRect: NSRect(x: 0, y: 0, width: contentSize.width, height: contentSize.height + footerHeight),
+            styleMask: [.titled],
+            backing: .buffered,
+            defer: false
+        )
+        window.title = "Quoteable Quotes Options"
+        window.isReleasedWhenClosed = false
+        window.isMovableByWindowBackground = true
+        window.hidesOnDeactivate = false
+        window.worksWhenModal = true
+
+        let container = NSView(frame: NSRect(origin: .zero, size: NSSize(width: contentSize.width, height: contentSize.height + footerHeight)))
+        contentView.frame.origin = NSPoint(x: 0, y: footerHeight)
+        container.addSubview(contentView)
+
+        let doneButton = NSButton(title: "Done", target: self, action: #selector(closeConfigureSheet(_:)))
+        doneButton.bezelStyle = .rounded
+        doneButton.frame = NSRect(x: contentSize.width - 92, y: 12, width: 72, height: 28)
+        container.addSubview(doneButton)
+
+        let detachButton = NSButton(title: "Detach Window", target: self, action: #selector(detachConfigureWindow(_:)))
+        detachButton.bezelStyle = .rounded
+        detachButton.frame = NSRect(x: doneButton.frame.minX - 130, y: 12, width: 120, height: 28)
+        container.addSubview(detachButton)
+
+        window.contentView = container
+        return window
+    }
+
     /// Syncs configuration controls from persisted defaults.
     private func refreshConfigControls() {
+        fontPicker?.removeAllItems()
+        fontPicker?.addItems(withTitles: NSFontManager.shared.availableFontFamilies.sorted())
+        if let fontPicker {
+            applyFontPreview(to: fontPicker)
+        }
         let fontName = saverDefaults?.string(forKey: Keys.fontName) ?? "Papyrus"
         if let picker = fontPicker, let idx = picker.itemTitles.firstIndex(of: fontName) {
             picker.selectItem(at: idx)
         }
 
+        animationStylePicker?.removeAllItems()
+        animationStylePicker?.addItems(withTitles: AnimationStyle.allCases.map(\.title))
         if let idx = AnimationStyle.allCases.firstIndex(of: configuredAnimationStyle()) {
             animationStylePicker?.selectItem(at: idx)
         }
@@ -892,7 +1135,11 @@ final class QuoteableQuotesView: ScreenSaverView {
         let fontSize = saverDefaults?.double(forKey: Keys.fontSize) ?? 48
         fontSizeSlider?.doubleValue = fontSize
         fontSizeValueLabel?.stringValue = "\(Int(fontSize))"
+        useProposedFontCheckbox?.state = (saverDefaults?.bool(forKey: Keys.useProposedFont) ?? true) ? .on : .off
+        useProposedFontSwitch?.state = (saverDefaults?.bool(forKey: Keys.useProposedFont) ?? true) ? .on : .off
 
+        backgroundModePicker?.removeAllItems()
+        backgroundModePicker?.addItems(withTitles: ["Solid Color", "Bundled Image", "Custom Image"])
         let modeRaw = saverDefaults?.string(forKey: Keys.backgroundMode) ?? BackgroundMode.bundledImage.rawValue
         let mode = BackgroundMode(rawValue: modeRaw) ?? .bundledImage
         switch mode {
@@ -901,6 +1148,8 @@ final class QuoteableQuotesView: ScreenSaverView {
         case .customImage: backgroundModePicker?.selectItem(at: 2)
         }
 
+        bundledBackgroundPicker?.removeAllItems()
+        bundledBackgroundPicker?.addItems(withTitles: Self.bundledBackgrounds.map(\.title))
         let bundledBG = saverDefaults?.string(forKey: Keys.bundledBackgroundFileName) ?? "images/old-parchment.png"
         if let idx = Self.bundledBackgrounds.firstIndex(where: { $0.fileName == bundledBG }) {
             bundledBackgroundPicker?.selectItem(at: idx)
@@ -912,7 +1161,13 @@ final class QuoteableQuotesView: ScreenSaverView {
             customBackgroundPathLabel?.stringValue = "No custom image selected"
         }
 
-        let bundledTheme = saverDefaults?.string(forKey: Keys.bundledQuoteFileName) ?? "quotes.xml"
+        quoteThemePicker?.removeAllItems()
+        quoteThemePicker?.addItems(withTitles: Self.bundledThemes.map(\.title))
+        let bundledTheme = Self.normalizedBundledQuoteFileName(saverDefaults?.string(forKey: Keys.bundledQuoteFileName))
+        if saverDefaults?.string(forKey: Keys.bundledQuoteFileName) != bundledTheme {
+            saverDefaults?.set(bundledTheme, forKey: Keys.bundledQuoteFileName)
+            saverDefaults?.synchronize()
+        }
         if let idx = Self.bundledThemes.firstIndex(where: { $0.fileName == bundledTheme }) {
             quoteThemePicker?.selectItem(at: idx)
         }
@@ -926,6 +1181,20 @@ final class QuoteableQuotesView: ScreenSaverView {
         baseTimeSlider?.doubleValue = base
         baseTimeValueLabel?.stringValue = String(format: "%.1f", base)
         showAttributionCheckbox?.state = (saverDefaults?.bool(forKey: Keys.showsAttribution) ?? true) ? .on : .off
+        refreshProposedFontNameLabel()
+    }
+
+    /// Refreshes the grey proposed font label from the currently loaded quote set.
+    private func refreshProposedFontNameLabel() {
+        proposedFontNameLabel?.stringValue = currentProposedFontName()
+    }
+
+    /// Returns the first non-empty XML font suggestion for the active saver source.
+    private func currentProposedFontName() -> String {
+        quotes
+            .compactMap { $0.font?.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .first(where: { !$0.isEmpty })
+            ?? "No proposed font"
     }
 
     /// Font picker action handler.
@@ -936,12 +1205,20 @@ final class QuoteableQuotesView: ScreenSaverView {
         transitionToQuote(currentQuote ?? nextFromDeck(), animated: false)
     }
 
+    @objc private func fontDidChange(_ sender: NSPopUpButton) {
+        fontChanged(sender)
+    }
+
     /// Animation-style picker action handler.
     @objc private func animationStyleChanged(_ sender: NSPopUpButton) {
         let idx = sender.indexOfSelectedItem
         guard idx >= 0, idx < AnimationStyle.allCases.count else { return }
         saverDefaults?.set(AnimationStyle.allCases[idx].rawValue, forKey: Keys.animationStyle)
         saverDefaults?.synchronize()
+    }
+
+    @objc private func animationStyleDidChange(_ sender: NSPopUpButton) {
+        animationStyleChanged(sender)
     }
 
     /// Foreground color picker action handler.
@@ -953,6 +1230,10 @@ final class QuoteableQuotesView: ScreenSaverView {
         }
     }
 
+    @objc private func foregroundDidChange(_ sender: NSColorWell) {
+        foregroundColorChanged(sender)
+    }
+
     /// Font-size slider action handler.
     @objc private func fontSizeChanged(_ sender: NSSlider) {
         let rounded = Double(Int(sender.doubleValue.rounded()))
@@ -961,6 +1242,21 @@ final class QuoteableQuotesView: ScreenSaverView {
         saverDefaults?.synchronize()
         fontSizeValueLabel?.stringValue = "\(Int(rounded))"
         transitionToQuote(currentQuote ?? nextFromDeck(), animated: false)
+    }
+
+    @objc private func fontSizeDidChange(_ sender: NSSlider) {
+        fontSizeChanged(sender)
+    }
+
+    /// Proposed XML font toggle handler.
+    @objc private func useProposedFontChanged(_ sender: NSControl) {
+        saverDefaults?.set(sender.integerValue == NSControl.StateValue.on.rawValue, forKey: Keys.useProposedFont)
+        saverDefaults?.synchronize()
+        transitionToQuote(currentQuote ?? nextFromDeck(), animated: false)
+    }
+
+    @objc private func useProposedFontDidChange(_ sender: NSControl) {
+        useProposedFontChanged(sender)
     }
 
     /// Background-mode picker action handler.
@@ -976,6 +1272,10 @@ final class QuoteableQuotesView: ScreenSaverView {
         applyBackground()
     }
 
+    @objc private func backgroundModeDidChange(_ sender: NSPopUpButton) {
+        backgroundModeChanged(sender)
+    }
+
     /// Solid background color action handler.
     @objc private func backgroundColorChanged(_ sender: NSColorWell) {
         if let data = try? NSKeyedArchiver.archivedData(withRootObject: sender.color, requiringSecureCoding: true) {
@@ -983,6 +1283,10 @@ final class QuoteableQuotesView: ScreenSaverView {
             saverDefaults?.synchronize()
             applyBackground()
         }
+    }
+
+    @objc private func colorDidChange(_ sender: NSColorWell) {
+        backgroundColorChanged(sender)
     }
 
     /// Bundled background picker action handler.
@@ -994,6 +1298,10 @@ final class QuoteableQuotesView: ScreenSaverView {
         saverDefaults?.synchronize()
         backgroundModePicker?.selectItem(at: 1)
         applyBackground()
+    }
+
+    @objc private func bundledBackgroundDidChange(_ sender: NSPopUpButton) {
+        bundledBackgroundChanged(sender)
     }
 
     /// Opens file picker and stores custom background image selection.
@@ -1039,8 +1347,13 @@ final class QuoteableQuotesView: ScreenSaverView {
         saverDefaults?.synchronize()
         quotePathLabel?.stringValue = "Using bundled \(Self.bundledThemes[idx].fileName)"
         loadQuotes()
+        refreshProposedFontNameLabel()
         showNextQuote(animated: false)
         scheduleNext()
+    }
+
+    @objc private func themeDidChange(_ sender: NSPopUpButton) {
+        quoteThemeChanged(sender)
     }
 
     /// Opens file picker and stores custom quote XML selection.
@@ -1059,6 +1372,7 @@ final class QuoteableQuotesView: ScreenSaverView {
             saverDefaults?.synchronize()
             quotePathLabel?.stringValue = url.path
             loadQuotes()
+            refreshProposedFontNameLabel()
             showNextQuote(animated: false)
             scheduleNext()
         }
@@ -1069,9 +1383,14 @@ final class QuoteableQuotesView: ScreenSaverView {
         saverDefaults?.removeObject(forKey: Keys.customQuoteFilePath)
         saverDefaults?.removeObject(forKey: Keys.customQuoteBookmarkData)
         saverDefaults?.synchronize()
-        let file = saverDefaults?.string(forKey: Keys.bundledQuoteFileName) ?? "quotes.xml"
+        let file = Self.normalizedBundledQuoteFileName(saverDefaults?.string(forKey: Keys.bundledQuoteFileName))
+        if saverDefaults?.string(forKey: Keys.bundledQuoteFileName) != file {
+            saverDefaults?.set(file, forKey: Keys.bundledQuoteFileName)
+            saverDefaults?.synchronize()
+        }
         quotePathLabel?.stringValue = "Using bundled \(file)"
         loadQuotes()
+        refreshProposedFontNameLabel()
         showNextQuote(animated: false)
         scheduleNext()
     }
@@ -1086,11 +1405,19 @@ final class QuoteableQuotesView: ScreenSaverView {
         scheduleNext()
     }
 
+    @objc private func baseTimeDidChange(_ sender: NSSlider) {
+        baseTimeChanged(sender)
+    }
+
     /// Attribution toggle action handler.
     @objc private func showAttributionChanged(_ sender: NSButton) {
         saverDefaults?.set(sender.state == .on, forKey: Keys.showsAttribution)
         saverDefaults?.synchronize()
         transitionToQuote(currentQuote ?? nextFromDeck(), animated: false)
+    }
+
+    @objc private func showAttributionDidChange(_ sender: NSButton) {
+        showAttributionChanged(sender)
     }
 
     /// Closes options sheet or detached options window.
@@ -1169,6 +1496,7 @@ final class QuoteableQuotesView: ScreenSaverView {
     private func syncLiveSettingsIfNeeded() {
         let fontName = saverDefaults?.string(forKey: Keys.fontName) ?? ""
         let fontSize = String(format: "%.1f", saverDefaults?.double(forKey: Keys.fontSize) ?? 48)
+        let useProposedFont = String(saverDefaults?.bool(forKey: Keys.useProposedFont) ?? true)
         let bgMode = saverDefaults?.string(forKey: Keys.backgroundMode) ?? ""
         let bundledBG = saverDefaults?.string(forKey: Keys.bundledBackgroundFileName) ?? ""
         let customBG = saverDefaults?.string(forKey: Keys.customBackgroundFilePath) ?? ""
@@ -1179,7 +1507,7 @@ final class QuoteableQuotesView: ScreenSaverView {
         let backgroundHash = String((saverDefaults?.data(forKey: Keys.backgroundColorData) ?? Data()).hashValue)
         let styleFingerprint = [
             fontName, fontSize, bgMode, bundledBG, customBG,
-            animationStyle, baseSeconds, showsAttribution, foregroundHash, backgroundHash
+            animationStyle, baseSeconds, showsAttribution, useProposedFont, foregroundHash, backgroundHash
         ].joined(separator: "|")
 
         let bundledTheme = saverDefaults?.string(forKey: Keys.bundledQuoteFileName) ?? ""

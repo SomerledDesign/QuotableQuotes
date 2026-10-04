@@ -4,32 +4,40 @@
 Swift Package Manager Mode
 
 ## Current Milestone
-Milestone 7: hotkey re-introduction and stability
+Release v1.0.1 packaging and publication
 
 ### Phase
 1. Goal  
-Re-introduce quote playback hotkeys with stable behavior in standalone and `.saver` runtimes.
+Ship Quoteable Quotes `.saver` v1.0.1:
+- validate the current Swift/macOS baseline
+- build and package the v1.0.1 `.saver` bundle
+- document Kevin Samuels/proposed-font changes in release notes
+- commit the release-ready workspace
+- push the new commit and release upstream
 
 2. Constraints  
 - Keep project buildable at all times.  
 - No speculative dependencies.  
-- Implement in small slices (input handling, playback state model, tests).  
+- Keep release documentation concise and tied to the current bundle behavior.
 - Preserve current working defaults when custom inputs are absent.
+- Do not rewrite existing release tags.
 
 3. Files to Modify  
-- `Sources/ScreenSaver/QuoteViewController.swift`  
-- `Sources/ScreenSaver/AppSettings.swift`  
-- `SaverBundle/*`  
-- `Tests/ScreenSaverTests/ScreenSaverTests.swift`  
 - `README.md`
-- `sketch.md`
+- `SaverBundle/Info.plist`
+- `docs/wiki/Installation.md`
+- `docs/releases/v1.0.1.md`
+- `handoff.md`
 
 4. Build/Test Command  
-- `swift build -c release`  
+- `scripts/compile-options-xib.sh`
+- `swift build -c release`
 - `swift test`
+- `scripts/build-saver.sh`
+- `ditto -c -k --keepParent dist/QuoteableQuotes.saver dist/QuoteableQuotes-v1.0.1.saver.zip`
 
 5. Success Definition  
-`swift build` succeeds without error.
+`swift build -c release`, `swift test`, `scripts/build-saver.sh`, release zip creation, commit, push, and GitHub release publication succeed without error.
 
 ## Completed Work
 - Bootstrapped Swift package project (`ScreenSaver` executable target).  
@@ -128,23 +136,78 @@ Re-introduce quote playback hotkeys with stable behavior in standalone and `.sav
   - Added options slider for base quote time and live rescheduling on style settings changes.
   - Dynamic timing now uses `recommendedDisplayDuration(baseSeconds:)` from the user-selected base.
   - Added test coverage for custom-base duration calculation.
-- Milestone 5 slice complete: attribution display + keyboard playback controls
+- Milestone 5 slice complete: attribution display
   - Added persisted `showsAttribution` setting in `AppSettings`.
   - Added options toggle: `Show Attribution (bottom-right)`.
   - Added attribution rendering in quote view:
     - bottom-right placement
     - smaller text than quote body
     - preferred font `Arial Narrow`, fallback `Tahoma`.
-  - Added keyboard controls in windowed and fullscreen:
-    - `Left Arrow`: pause + previous quote
-    - `Right Arrow`: pause + next quote
-    - `Space`: pause/resume playback
-  - Added quote-history navigation so previous/next works predictably while preserving randomized deck behavior for unseen quotes.
-  - Fullscreen input-exit monitor now passes arrow/space controls through and still exits on `Esc`/other key input and mouse input.
-- Hotkey rollback (post-Milestone 6 stabilization):
-  - Removed arrow/space playback hotkey handling from both standalone app and `.saver`.
-  - Removed quote pause/history keyboard plumbing tied to hotkey behavior.
-  - Updated docs to move hotkeys into Milestone 7.
+  - Fullscreen input-exit monitor exits on keyboard and mouse input.
+- Workspace expansion complete:
+  - Added root `ACTIVE_CONTEXT.md` to distinguish Swift/macOS and HA/web work in the shared workspace.
+  - Added parent `.gitignore` rule for nested `QQ-ha/` repo isolation.
+  - Moved HA port planning into nested `QQ-ha/sketch.md`.
+- Generic quote library registration complete:
+  - Added `generic-quotes.xml` to the bundled theme lists for both standalone app and `.saver`.
+  - Confirmed bundled XML resources are copied directly from `Sources/ScreenSaver/Resources` during build/package steps rather than generated from a cached quote manifest.
+- Saver install-path fix complete:
+  - `scripts/install-saver.sh` now removes any previously installed `~/Library/Screen Savers/QuoteableQuotes.saver` before copying the new bundle.
+  - This fixes stale installs where System Settings kept loading the February 28, 2026 bundle despite fresh builds in `dist/`.
+- Hotkey removal cleanup complete:
+  - Removed playback hotkey code from both the standalone app and the `.saver`.
+  - Removed quote-history/pause state and related tests.
+  - Removed documentation that advertised hotkey support.
+- Options layout refactor complete:
+  - Reworked the standalone `Options...` display tab into sectioned `NSBox` groups with stack-based layout.
+  - Grouped related controls together (`Appearance`, `Background`, `Quote Source`, `Playback`) and placed `Background Color` / `Font Color` on the same row for cleaner visual editing.
+  - Preserved the existing settings/actions model while making the dialog structure more visually tunable.
+- Visual `.xib` scaffold added:
+  - Added `Sources/ScreenSaver/Resources/DisplayOptionsView.xib` as an Xcode-openable basis for visually editing the standalone options dialog layout.
+  - The `.xib` validates with `ibtool` and is intentionally not wired into the live app yet, so you can reshape it in Interface Builder without destabilizing the working dialog.
+  - Intended future use: finalize the standalone layout visually, then use it as the basis for the `.saver` options migration.
+- Wired `.xib` control surface added:
+  - Replaced the placeholder/image mockup in `Sources/ScreenSaver/Resources/DisplayOptionsView.xib` with actual AppKit controls for all current display settings.
+  - Added controller-side design-time outlets in `Sources/ScreenSaver/OptionsViewController.swift` so the XIB has real connections for popups, color wells, sliders, value labels, path labels, and buttons.
+  - Connected XIB controls to the existing action methods (`fontDidChange:`, `themeDidChange:`, `chooseXMLFile:`, etc.) while leaving the live standalone app on the stable programmatic dialog for now.
+  - `ibtool --compile /tmp/DisplayOptionsView.nib Sources/ScreenSaver/Resources/DisplayOptionsView.xib` succeeds.
+- Standalone app now prefers the XIB-backed dialog:
+  - `DisplayOptionsViewController` now prefers `DisplayOptionsView.nib` from `Bundle.module` and falls back to the programmatic layout if the nib is unavailable.
+  - Added `scripts/compile-options-xib.sh` to compile `DisplayOptionsView.xib` into `Sources/ScreenSaver/Resources/DisplayOptionsView.nib` for SwiftPM CLI builds.
+  - `AppDelegate` now sizes the options window from the controller's preferred content size instead of the old hardcoded small rect.
+  - `swift build` copies both `DisplayOptionsView.nib` and `DisplayOptionsView.xib` into the app resource bundle; runtime should pick up the nib.
+- Fullscreen options-entry fix:
+  - `Cmd+,` is now explicitly allowed in standalone `--fullscreen` mode without being treated as dismissal input.
+  - Opening the options window temporarily disables fullscreen exit-on-input; closing the options window restores it.
+  - This preserves the screensaver-like input-exit behavior while still allowing the options dialog to be reached in fullscreen.
+- Nib-backed dialog sizing fix:
+  - The standalone options window now uses the XIB view's actual frame size as a floor instead of relying only on `fittingSize`.
+  - This prevents the nib-backed dialog from opening too short and clipping lower controls even when the visual layout itself is correct.
+- Fullscreen windowing fix:
+  - The standalone `--fullscreen` mode no longer relies on native `toggleFullScreen`.
+  - It now opens a borderless window sized directly to `NSScreen.main.frame`, which keeps quote text and attribution coordinates aligned to the actual display bounds.
+  - This avoids the content offset/clipping issues seen with the previous native fullscreen transition path.
+- Fullscreen visibility fix:
+  - The borderless fullscreen window now uses `.moveToActiveSpace`, `orderFrontRegardless()`, and an elevated window level so it actually appears above the launch surface/current desktop.
+  - The standalone options window is raised to `.modalPanel` while fullscreen is active so it still appears above the quote wall.
+- Fullscreen host-window adjustment:
+  - Replaced the fully borderless standalone fullscreen window with a keyable titled window using `.fullSizeContentView`, hidden title chrome, and screen-sized framing.
+  - Activation now uses `NSRunningApplication.current.activate(options: [.activateAllWindows, .activateIgnoringOtherApps])` so fullscreen launch should take focus without needing `Cmd+Tab`.
+- Fullscreen activation and options-close exit fix:
+  - Fullscreen launch now gets a second deferred activation/order-front pass to improve focus acquisition at app startup.
+  - Closing the options window no longer immediately re-arms exit-on-input on the same mouse/key gesture; the re-enable is delayed slightly so the close interaction itself does not terminate the app.
+- Fullscreen path simplified again:
+  - The standalone app is back on the native `toggleFullScreen` path instead of the borderless/keyable host-window experiments.
+  - `QuoteViewController.loadView()` no longer disables autoresizing-mask translation on the top-level root view, which was a plausible cause of the previous fullscreen content offset.
+- Saver options sheet now uses the shared XIB-backed layout:
+  - `QuoteableQuotesView` can now load `DisplayOptionsView.nib` from the saver bundle and bind the same controls used by the standalone app.
+  - The saver maps the loaded XIB controls onto its existing settings properties and uses selector aliases so the existing saver persistence/actions continue to work.
+  - The hand-built saver options form remains as a fallback if the nib cannot be loaded.
+  - `scripts/build-saver.sh` succeeds with the shared nib copied into the `.saver` bundle resources.
+- XML font suggestion precedence is now active:
+  - Standalone rendering now uses a quote's XML `font` value when present and falls back to the font selected in `Options...` otherwise.
+  - The `.saver` parser now reads `<font>` from XML and applies the same precedence rule at render time.
+  - Added test coverage for the standalone precedence helper and validated both `swift test` and `scripts/build-saver.sh`.
 - Background image reliability patch:
   - Hardened bundled image lookup in standalone and `.saver` targets (normalized subdirectory/resource lookup).
   - Expanded tilde (`~`) paths for custom background image loading.
@@ -152,6 +215,35 @@ Re-introduce quote playback hotkeys with stable behavior in standalone and `.sav
   - Updated `README.md`, `sketch.md`, and `handoff.md` for current baseline and release-first workflows.
 - Code documentation pass:
   - Added Doxygen-style API comments across key Swift source files.
+- Kevin Samuels quote library added:
+  - Added `kevin-samuels-quotes.xml` as a 200-entry bundled XML pack.
+  - Registered the pack in both standalone and `.saver` bundled theme lists.
+  - Entries are paraphrased thematic aphorisms attributed as `Kevin Samuels (paraphrased)` and marked as not verified verbatim in `attribution`.
+  - Added test coverage for count, uniqueness, theme key, author labeling, attribution note, and standalone registration.
+- Kevin Samuels saver runtime fix:
+  - Removed a stray non-paraphrased entry so `kevin-samuels-quotes.xml` is exactly 200 parsed entries.
+  - Updated `.saver` XML parsing to consume `<theme>` metadata for schema parity with the standalone parser.
+  - Added `.saver` bundled quote filename normalization so saved theme keys such as `kevin-samuels` resolve to `kevin-samuels-quotes.xml`.
+  - Added tolerance for a persisted misspelling, `kevin-samauels-quotes.xml`, and persistently rewrites it to `kevin-samuels-quotes.xml`.
+  - Cleared stale quote arrays before `.saver` reloads so failed loads cannot keep an old deck.
+  - Rebuilt and installed `~/Library/Screen Savers/QuoteableQuotes.saver`, then terminated stale `legacyScreenSaver` / System Settings preview processes so macOS reloads the installed bundle.
+- Proposed font toggle added:
+  - Added persisted `Use proposed font?` setting to standalone and `.saver` options.
+  - When enabled, XML `<font>` suggestions override the selected font; when disabled, the selected font is authoritative.
+  - Updated font resolution to accept both font names and family names before falling back to the system font.
+  - Updated the shared XIB and compiled nib so the checkbox appears in the Appearance group.
+- Proposed font switch UI cleanup:
+  - Replaced the checkbox-style proposed-font control surface with a left-justified `Use Proposed Font?` label, grey proposed font-name label, and an `NSSwitch`.
+  - Applied the switch row to the standalone options dialog, shared XIB-backed saver options sheet, and hand-built saver fallback sheet.
+  - Proposed font label now refreshes when bundled theme, custom XML, or bundled-source selection changes.
+  - Rebuilt and installed `~/Library/Screen Savers/QuoteableQuotes.saver`, then terminated the stale `legacyScreenSaver` preview process so macOS reloads the updated bundle.
+- Release v1.0.1 prep:
+  - Bumped `.saver` `CFBundleShortVersionString` to `1.0.1`.
+  - Added `docs/releases/v1.0.1.md` with Kevin Samuels, saver-loading, and proposed-font switch changes.
+  - Updated install documentation and README release-note pointer for v1.0.1.
+  - Built `dist/QuoteableQuotes.saver` and generated `dist/QuoteableQuotes-v1.0.1.saver.zip`.
+- README v1.0.1 follow-up:
+  - Added a top-level "What's New in v1.0.1" section to the primary `README.md` so the Kevin Samuels and proposed-font switch changes are visible without opening release notes.
 - Milestone 6 complete: resources cleanup + `.saver` packaging
   - Updated bundled background references to `Resources/images/*` paths.
   - Updated bundled image loading logic to resolve subdirectory assets correctly.
@@ -163,11 +255,27 @@ Re-introduce quote playback hotkeys with stable behavior in standalone and `.sav
     - `scripts/install-saver.sh`
   - `scripts/build-saver.sh` now produces `dist/QuoteableQuotes.saver`.
   - Updated README with `.saver` build/install workflow.
+- Release v1.0.0 prep:
+  - Switched active context back to the root Swift/macOS project.
+  - Added install wiki content at `docs/wiki/Installation.md`.
+  - Added repo release-page draft at `docs/releases/v1.0.0.md`.
+  - Set saver bundle short version to `1.0.0`.
+- GitHub release publication follow-up:
+  - README now points users to `https://github.com/SomerledDesign/QuotableQuotes/releases/latest`.
+  - `docs/releases/v1.0.0.md` now uses GitHub-safe release/download/install wording.
+  - Existing `v1.0.0` tag remains anchored at `bf15102`.
+- GitHub release v1.0.0 published:
+  - Created formal GitHub Release at `https://github.com/SomerledDesign/QuotableQuotes/releases/tag/v1.0.0`.
+  - Uploaded release asset `QuoteableQuotes-v1.0.0.saver.zip`.
+  - Verified `https://github.com/SomerledDesign/QuotableQuotes/releases/latest` redirects to `v1.0.0`.
 
 ## Build Status
-- Last successful build command: `swift build`  
+- Last successful XIB compile command: `scripts/compile-options-xib.sh`
+- Last successful build command: `swift build -c release`
 - Last successful test command: `swift test`
+- Last successful saver build command: `scripts/build-saver.sh`
+- Last successful release zip command: `ditto -c -k --keepParent dist/QuoteableQuotes.saver dist/QuoteableQuotes-v1.0.1.saver.zip`
 
 ## Outstanding Blockers
 - No code blockers for current baseline.
-- Milestone 7 hotkey behavior remains intentionally deferred and unimplemented in the current build.
+- GitHub wiki repository is not enabled; install guide remains in repo docs.

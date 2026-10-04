@@ -2,6 +2,15 @@
 
 macOS quote screensaver prototype built with Swift Package Manager.
 
+## What's New in v1.0.1
+
+- Added a bundled Kevin Samuels quote library with 200 paraphrased thematic entries.
+- Fixed `.saver` quote loading for the Kevin Samuels theme, including saved theme aliases and the prior `kevin-samauels` misspelling.
+- Added a persisted `Use Proposed Font?` setting for XML `<font>` suggestions.
+- Replaced the proposed-font checkbox-style control with a real switch, left-justified label, and grey proposed-font name.
+- Shows the active proposed font beside the switch, such as `Avenir Next Condensed` for the Kevin Samuels pack.
+- Improved font resolution so XML font suggestions can match both exact font names and installed font families.
+
 ## Prerequisites
 - macOS
 - Xcode command line tools (`swift` available in shell)
@@ -30,6 +39,14 @@ In fullscreen mode, mouse or keyboard input exits the app (screensaver-style beh
 
 ## Build `.saver` Bundle (Release)
 
+The current user-facing download page is the GitHub latest release:
+
+```text
+https://github.com/SomerledDesign/QuotableQuotes/releases/latest
+```
+
+To build the `.saver` bundle locally:
+
 ```bash
 scripts/build-saver.sh
 ```
@@ -48,11 +65,14 @@ scripts/install-saver.sh
 
 Then open `System Settings -> Screen Saver` and select `Quoteable Quotes`.
 
+For a user-facing install walkthrough, see [docs/wiki/Installation.md](docs/wiki/Installation.md).
+
 ## Options
 Use `ScreenSaver -> Options...` in standalone app, or `Options...` in Screen Saver settings.
 
 Implemented options:
 - Font family picker (with live font-face preview in dropdown)
+- `Use Proposed Font?` switch with the active XML `<font>` suggestion shown beside it
 - Font color picker
 - Font size slider
 - Background mode:
@@ -89,7 +109,9 @@ Supported XML shape:
 
 Bundled libraries:
 - `quotes.xml` (mixed sample, 100 total)
+- `generic-quotes.xml` (generic sample, 33 total)
 - `leadership-quotes.xml` (100 total)
+- `kevin-samuels-quotes.xml` (200 total, paraphrased thematic entries)
 - `stoicism-quotes.xml` (100 total, now includes Arthur Schopenhauer)
 - `comedic-quotes.xml` (100 total)
 - `greek-philosophers-quotes.xml` (100 total)
@@ -99,7 +121,7 @@ Runtime behavior:
 - Quotes are randomized.
 - No repeats until the full selected set is shown.
 - Dynamic timing scales from the configured base time.
-- Hotkeys are currently disabled and deferred to Milestone 7.
+- XML `<font>` values are used only when `Use Proposed Font?` is enabled.
 
 ## Test
 
@@ -112,6 +134,12 @@ swift test
 ```text
 .build/arm64-apple-macosx/release/ScreenSaver
 ```
+
+## Release Notes
+
+Latest GitHub release: https://github.com/SomerledDesign/QuotableQuotes/releases/latest
+
+The checked-in v1.0.1 release notes source is [docs/releases/v1.0.1.md](docs/releases/v1.0.1.md).
 
 ## License
 
