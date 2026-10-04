@@ -10,6 +10,7 @@ EXE_PATH="$STAGE_OUT_DIR/Contents/MacOS/QuoteableQuotes"
 RESOURCE_DIR="$STAGE_OUT_DIR/Contents/Resources"
 
 rm -rf "$OUT_DIR"
+mkdir -p "$(dirname "$OUT_DIR")"
 mkdir -p "$STAGE_OUT_DIR/Contents/MacOS" "$RESOURCE_DIR"
 
 cp "$ROOT_DIR/SaverBundle/Info.plist" "$STAGE_OUT_DIR/Contents/Info.plist"
