@@ -1,6 +1,8 @@
-# ScreenSaver
+# Quoteable Quotes
 
-macOS quote screensaver prototype built with Swift Package Manager.
+A macOS quote screen saver (`QuoteableQuotes.saver`) with a standalone preview app, built with
+Swift Package Manager. The repository is `QuotableQuotes`; the Swift package and the preview app
+are named `ScreenSaver`.
 
 ## What's New in v1.0.1
 
