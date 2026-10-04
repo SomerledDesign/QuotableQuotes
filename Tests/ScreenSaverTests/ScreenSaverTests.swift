@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import Testing
 @testable import ScreenSaver
@@ -179,4 +180,27 @@ import Testing
     #expect(styles.contains(.materialize))
     #expect(styles.contains(.genie))
     #expect(styles.contains(.flagWave))
+}
+
+@Test func bundledBackgroundImagesResolveFromResourcesFolder() {
+    let names = ["antique-parchment", "gray-linen", "offwhite-fabric-texture", "old-papyrus", "old-parchment", "white-paper"]
+    for name in names {
+        let url = BundledResources.url(forResource: name, withExtension: "png", subdirectory: "images")
+        #expect(url != nil, "missing images/\(name).png")
+        if let url {
+            #expect(NSImage(contentsOf: url) != nil)
+        }
+    }
+}
+
+@Test func bundledOptionsNibResolvesFromResourcesFolder() {
+    #expect(BundledResources.url(forResource: "DisplayOptionsView", withExtension: "nib") != nil)
+}
+
+@MainActor
+@Test func displayOptionsViewControllerLoadsNibLayout() {
+    let controller = DisplayOptionsViewController()
+    _ = controller.view
+    #expect(controller.usesXIBLayout)
+    #expect(controller.isViewLoaded)
 }

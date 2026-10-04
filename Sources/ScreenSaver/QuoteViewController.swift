@@ -178,17 +178,17 @@ final class QuoteViewController: NSViewController {
         }
         let lookupSubdirectory = subdirectory.isEmpty ? nil : subdirectory
 
-        if let url = Bundle.module.url(forResource: name, withExtension: ext, subdirectory: lookupSubdirectory),
+        if let url = BundledResources.url(forResource: name, withExtension: ext, subdirectory: lookupSubdirectory),
            let image = NSImage(contentsOf: url) {
             return image
         }
 
-        if let directURL = Bundle.module.url(forResource: normalized, withExtension: nil),
+        if let directURL = BundledResources.url(forResource: normalized, withExtension: nil),
            let image = NSImage(contentsOf: directURL) {
             return image
         }
 
-        if let flattenedURL = Bundle.module.url(forResource: name, withExtension: ext),
+        if let flattenedURL = BundledResources.url(forResource: name, withExtension: ext),
            let image = NSImage(contentsOf: flattenedURL) {
             return image
         }

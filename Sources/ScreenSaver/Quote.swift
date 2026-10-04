@@ -189,7 +189,7 @@ enum QuoteRepository {
         let name = URL(fileURLWithPath: fileName).deletingPathExtension().lastPathComponent
         let ext = URL(fileURLWithPath: fileName).pathExtension
         let useExt = ext.isEmpty ? "xml" : ext
-        let url = Bundle.module.url(forResource: name, withExtension: useExt)
+        let url = BundledResources.url(forResource: name, withExtension: useExt)
         guard let url else {
             throw QuoteLoadError.invalidXML
         }

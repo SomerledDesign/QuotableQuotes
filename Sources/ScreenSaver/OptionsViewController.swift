@@ -42,7 +42,9 @@ final class DisplayOptionsViewController: NSViewController {
     @IBOutlet private weak var xibBaseTimeValueLabel: NSTextField?
     @IBOutlet private weak var xibShowAttributionCheckbox: NSButton?
 
-    private let usesXIBLayout: Bool
+    /// Compiled options nib inside the resource bundle, when present.
+    private let nibURL: URL?
+    private(set) var usesXIBLayout: Bool
 
     private var activeFontPicker: NSPopUpButton { xibFontPicker ?? fontPicker }
     private var activeBackgroundColorWell: NSColorWell { xibBackgroundColorWell ?? colorWell }
@@ -65,9 +67,11 @@ final class DisplayOptionsViewController: NSViewController {
     private var activeShowAttributionCheckbox: NSButton { xibShowAttributionCheckbox ?? showAttributionCheckbox }
 
     init() {
-        let hasNib = Bundle.module.url(forResource: "DisplayOptionsView", withExtension: "nib") != nil
-        usesXIBLayout = hasNib
-        super.init(nibName: hasNib ? NSNib.Name("DisplayOptionsView") : nil, bundle: hasNib ? .module : nil)
+        // The nib lives in the bundle's Resources/ folder, which NSViewController's
+        // name-based nib lookup cannot reach, so it is loaded from its URL in loadView().
+        nibURL = BundledResources.url(forResource: "DisplayOptionsView", withExtension: "nib")
+        usesXIBLayout = nibURL != nil
+        super.init(nibName: nil, bundle: nil)
     }
 
     @available(*, unavailable)
@@ -297,8 +301,14 @@ final class DisplayOptionsViewController: NSViewController {
     /// Builds root view container.
     override func loadView() {
         if usesXIBLayout {
-            super.loadView()
-            return
+            if let nibURL,
+               let data = try? Data(contentsOf: nibURL),
+               NSNib(nibData: data, bundle: .module).instantiate(withOwner: self, topLevelObjects: nil),
+               isViewLoaded {
+                return
+            }
+            // Fall back to the programmatic layout if the nib cannot be loaded.
+            usesXIBLayout = false
         }
 
         let root = NSView()
